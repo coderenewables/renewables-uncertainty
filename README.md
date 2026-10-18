@@ -1,6 +1,8 @@
-# Wind Energy Uncertainty
+# WattOdds
 
-A framework tool for renewable project developers and owners to capture and calculate energy yield uncertainty across the whole project chain — from the wind mast or lidar (or irradiance data) to the point of interconnection — for wind, solar PV, wind + solar hybrids, and hybrids with battery storage.
+*Watt are the odds?*
+
+WattOdds (formerly "Wind Energy Uncertainty") is a framework tool for renewable project developers and owners to capture and calculate energy yield uncertainty across the whole project chain — from the wind mast or lidar (or irradiance data) to the point of interconnection — for wind, solar PV, wind + solar hybrids, and hybrids with battery storage.
 
 It runs entirely in the browser: one self-contained HTML page (HTML + JavaScript + CSS), no server.
 
@@ -27,7 +29,7 @@ src/
   plantview.js   plant drawing and inspector (inlined into ui.js at build time)
   ui.js          interface
 build.py         concatenates src/ into dist/wind-energy-uncertainty.html
-dist/            the built single-file page
+dist/            the built single-file page (file name kept from before the rename so existing links keep working)
 tests/           unit tests (node) and browser checks (Playwright)
 docs/            decisions and build notes
 ```
@@ -50,6 +52,10 @@ node tests/export.js <outdir> <xlsx.full.min.js> [solar|hybrid|bess]
 ```
 
 The browser checks use Playwright; the paths to Playwright and Chromium at the top of those files point at the environment they were written in and may need changing.
+
+## Name and logo
+
+The name is "what are the odds?" with watts: the tool gives the odds of an energy outcome (P50 to P99) and of meeting a supply contract. The mark is a dot plot of eleven outcomes; the one dot beyond the line is roughly the 10 % that falls below P90. At 24 px and below it becomes five bars. Colours follow the app: orange `#d9480f` (dark theme `#ff6b35`) on ink `#10212a`.
 
 ## Notes
 

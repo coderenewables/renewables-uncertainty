@@ -74,7 +74,9 @@ a { color: var(--accent-ink); }
 .top-in { display: flex; align-items: center; gap: 14px; min-height: var(--top-h); }
 .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .brand svg { flex: none; }
-.brand-name { font-family: var(--f-display); font-stretch: 118%; font-weight: 800; font-size: 0.98rem; letter-spacing: 0.01em; white-space: nowrap; }
+.brand-name { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 1.12rem; line-height: 1.1; letter-spacing: -0.01em; white-space: nowrap; }
+.brand-name .odds { color: var(--accent-ink); }
+.brand-mark { color: var(--ink); }
 .brand-sub { font-family: var(--f-mono); font-size: 0.7rem; color: var(--ink-3); white-space: nowrap; }
 .proj { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; overflow: hidden; }
 .proj-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }

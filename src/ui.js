@@ -74,12 +74,13 @@
   function rerender() { recompute(); renderStage(pvMode()); updateChrome(); }
 
   /* ---------- shell ---------- */
-  const MAST_ICON = '<svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><line x1="13" y1="4" x2="13" y2="29" stroke="currentColor" stroke-width="2"/><line x1="7" y1="29" x2="19" y2="29" stroke="currentColor" stroke-width="2"/><line x1="13" y1="9" x2="21" y2="9" stroke="currentColor" stroke-width="1.5"/><circle cx="21" cy="6.5" r="2.4" fill="none" stroke="var(--accent)" stroke-width="1.8"/><line x1="13" y1="17" x2="5" y2="17" stroke="currentColor" stroke-width="1.5"/><circle cx="5" cy="14.5" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="11.5" y="2" width="3" height="3" fill="var(--accent)"/></svg>';
+  // WattOdds mark: a dot plot of outcomes; the one dot beyond the line (1 in 11) is the tail below P90
+  const BRAND_MARK = '<svg class="brand-mark" width="32" height="32" viewBox="0 0 64 64" aria-hidden="true"><circle cx="10" cy="50" r="5" fill="var(--accent)" fill-opacity="0.32"/><circle cx="21" cy="50" r="5" fill="var(--accent)"/><circle cx="21" cy="39" r="5" fill="var(--accent)"/><circle cx="32" cy="50" r="5" fill="var(--accent)"/><circle cx="32" cy="39" r="5" fill="var(--accent)"/><circle cx="32" cy="28" r="5" fill="var(--accent)"/><circle cx="32" cy="17" r="5" fill="var(--accent)"/><circle cx="43" cy="50" r="5" fill="var(--accent)"/><circle cx="43" cy="39" r="5" fill="var(--accent)"/><circle cx="43" cy="28" r="5" fill="var(--accent)"/><circle cx="54" cy="50" r="5" fill="var(--accent)"/><path d="M15.5,10 V58" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" fill="none"/></svg>';
 
   function renderShell() {
     document.getElementById('app').innerHTML = `
       <header class="top"><div class="top-in">
-        <div class="brand">${MAST_ICON}<div><div class="brand-name">Wind Energy Uncertainty</div><div class="brand-sub">wind and solar · source to meter</div></div></div>
+        <div class="brand">${BRAND_MARK}<div><div class="brand-name">Watt<span class="odds">Odds</span></div><div class="brand-sub">energy yield uncertainty · source to meter</div></div></div>
         <div class="proj"><span class="proj-name" id="projName"></span><span id="projTags"></span></div>
         <div class="actions">
           <div class="vt" role="group" aria-label="View"><button data-act="mode" data-val="plant" aria-pressed="${pvMode()}" aria-label="Plant view" title="Plant view"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 13h12M5 13V6M5 6l-3-2M5 6l3-2M5 6v-3M11 13V9h3v4" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span class="bt">Plant view</span></button><button data-act="mode" data-val="steps" aria-pressed="${!pvMode()}" aria-label="Step by step" title="Step by step"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h9M4 8h9M4 13h9" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="1.8" cy="3" r="1" fill="currentColor"/><circle cx="1.8" cy="8" r="1" fill="currentColor"/><circle cx="1.8" cy="13" r="1" fill="currentColor"/></svg><span class="bt">Step by step</span></button></div>
@@ -1372,7 +1373,7 @@
     const contrib = {}; r.contrib.forEach(c => { contrib[c.key] = c; });
     const wb = X.utils.book_new();
     const sum = [
-      ['Wind Energy Uncertainty — results'], ['Project', state.meta.name], ['Site / notes', state.meta.site], ['Exported', new Date().toISOString()],
+      ['WattOdds — energy yield uncertainty results'], ['Project', state.meta.name], ['Site / notes', state.meta.site], ['Exported', new Date().toISOString()],
       ['Example values', state.meta.example ? 'yes' : 'no'], [],
       ['Technology', { wind: 'Wind', solar: 'Solar PV', hybrid: 'Hybrid wind + solar' }[ptech()]],
       ...(isHybrid() ? [['Net P50 at POI, year 1 (GWh/yr)', +p50.toFixed(3)], ['Wind P50 before shared losses (GWh/yr)', +r.wind.en.p50.toFixed(3)], ['Solar P50 year 1 before shared losses (GWh/yr)', +r.solar.en.p50.toFixed(3)], ['Shared grid efficiency', +r.en.eff.toFixed(5)], ['Connection capacity (MW)', r.model.ctx.gridMW], ['Connection as share of combined capacity', +r.model.ctx.connFrac.toFixed(4)], ['Wind–solar year-to-year correlation', r.model.ctx.rhoIav], ['Wind–solar assessment correlation', r.model.ctx.rhoRes], ['Sum of separate P90s, ' + hzLabel() + ' (GWh/yr)', +r.focus.sumP90.toFixed(3)], ['Portfolio gain at P90, ' + hzLabel() + ' (GWh/yr)', +r.focus.portfolioGain.toFixed(3)], []]

@@ -1,4 +1,4 @@
-# Decisions and build notes — Phases 1–4 and the plant view
+# WattOdds — decisions and build notes (Phases 1–4, plant view, name)
 
 *Updated 16 Oct 2026*
 
@@ -103,6 +103,12 @@ Same page and link (version 5). The tool now opens on a drawing of the plant; th
 **Layouts:** wide screens show the drawing with the inspector beside it; tablets show the inspector below; phones show the parts as a vertical chain from mast to grid, with the inspector as a bottom sheet. Light and dark themes.
 
 **Export:** the Excel workbook has a new "Plant parts" sheet with every part and category, its energy σ, share of total, combined loss and share resting on generic defaults.
+
+## Name and logo: WattOdds
+
+The tool is now called **WattOdds** ("what are the odds?" with watts), chosen over Thelivu, Yieldband, Plumbline, Varambu, Doubtput, Bellweather, Gustimate, Suncertain and Monte Kaatru. Pramana (registered software trademark), Sigma-based names (an existing energy software) and WattIf (an existing app) were ruled out. Web checks only: run a trademark search (IP India) and confirm the domain before launch.
+
+The mark is a dot plot of eleven outcomes with a line marking off one dot, roughly the 10 % below P90; at 24 px and below it becomes five bars (used for the favicon). The wordmark sets "Watt" in ink and "Odds" in orange, in Archivo. Header, page title, favicon and Excel title carry the new name; storage keys, saved-project format and the built file name are unchanged, so saved projects and existing links keep working.
 
 ## Values to review
 
