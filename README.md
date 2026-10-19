@@ -57,6 +57,10 @@ The browser checks use Playwright; the paths to Playwright and Chromium at the t
 
 The name is "what are the odds?" with watts: the tool gives the odds of an energy outcome (P50 to P99) and of meeting a supply contract. The mark is a dot plot of eleven outcomes; the one dot beyond the line is roughly the 10 % that falls below P90. At 24 px and below it becomes five bars. Colours follow the app: orange `#d9480f` (dark theme `#ff6b35`) on ink `#10212a`.
 
+## Licence
+
+WattOdds is open source under the [Apache License 2.0](LICENSE). Copyright 2026 Nithish Seenivasagam (coderenewables.com). You can use, change and share it, including commercially, as long as you keep the copyright and licence notices and say what you changed. See `LICENSE` and `NOTICE`.
+
 ## Notes
 
 Default values marked "framework judgement" in the tool are starting points set from cited context, not published figures, and should be reviewed. See `docs/` for decisions, values to review and known limits.

@@ -1,3 +1,6 @@
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Plant: places every uncertainty item on a part of the plant drawing (a component) and in a
    category within it, and adds up each part's share of the energy uncertainty. No DOM.
    Shares come from Engine contributions, so the parts add up to the plant total in variance:

@@ -1,3 +1,6 @@
+  /* WattOdds — energy yield uncertainty, source to meter.
+     Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+     SPDX-License-Identifier: Apache-2.0 */
   /* ======================= Plant view =======================
      A drawing of the plant. Each part carries a badge with its share of the energy uncertainty;
      selecting a part pops its categories out as bubbles, and the inspector beside the drawing

@@ -110,6 +110,10 @@ The tool is now called **WattOdds** ("what are the odds?" with watts), chosen ov
 
 The mark is a dot plot of eleven outcomes with a line marking off one dot, roughly the 10 % below P90; at 24 px and below it becomes five bars (used for the favicon). The wordmark sets "Watt" in ink and "Odds" in orange, in Archivo. Header, page title, favicon and Excel title carry the new name; storage keys, saved-project format and the built file name are unchanged, so saved projects and existing links keep working.
 
+## Licence
+
+Open source under the Apache License 2.0 (`LICENSE`, `NOTICE`, an SPDX header in each source file, and a line with the source link in the app's Projects and Export panel). Copyright 2026 Nithish Seenivasagam (coderenewables.com).
+
 ## Values to review
 
 Items marked "framework judgement" in the app are starting values set by the tool from cited context, not published figures. They are the first thing for the team to review: mast data integrity, lidar verification/classification/mounting/availability, direction and density, reference consistency, long-term representativeness, distribution and gap filling, shear representativeness, flow model adjustments for model type, distance and number of masts, terrain inputs and sensitivity, power curve, all losses except internal wakes and electrical, and metering.

@@ -1,3 +1,6 @@
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Calculation core. Pure functions, no DOM.
    Units: wind speed m/s, power MW, energy GWh/yr, uncertainties in percent (1.5 = 1.5 %). */
 const Engine = (() => {

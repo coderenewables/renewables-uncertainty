@@ -1,3 +1,6 @@
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Item library: every uncertainty and loss item, its input modes, defaults, sources and explanations.
    Values are percentages. Wind-speed items ('ws') are relative wind speed uncertainty;
    energy items ('en') are relative energy uncertainty; loss items carry a loss L (%) and its

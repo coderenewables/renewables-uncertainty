@@ -1,3 +1,6 @@
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Hourly storage and firm-supply engine. Pure functions, no DOM.
    Builds hourly wind and solar profiles (generated or uploaded), dispatches a battery against a demand
    profile, scores demand-fulfilment rules, and runs a Monte Carlo over resource, weather sequence and

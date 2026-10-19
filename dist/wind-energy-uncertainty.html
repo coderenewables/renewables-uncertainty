@@ -1,3 +1,6 @@
+<!-- WattOdds — energy yield uncertainty, source to meter.
+     Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+     SPDX-License-Identifier: Apache-2.0 -->
 <title>WattOdds</title>
 <meta name="description" content="WattOdds: energy yield uncertainty for wind, solar, hybrids and storage, from the source to the meter.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='45' width='9' height='11' rx='2.5' fill='%23d9480f' fill-opacity='.45'/%3E%3Crect x='16' y='34' width='9' height='22' rx='2.5' fill='%23d9480f'/%3E%3Crect x='28' y='12' width='9' height='44' rx='2.5' fill='%23d9480f'/%3E%3Crect x='40' y='23' width='9' height='33' rx='2.5' fill='%23d9480f'/%3E%3Crect x='52' y='45' width='9' height='11' rx='2.5' fill='%23d9480f'/%3E%3C/svg%3E">
@@ -8,6 +11,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@200..800&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Layout: the left rail is the uncertainty chain itself — measurement at the top, the point of
    interconnection at the bottom — and doubles as navigation. The worksheet sits in the middle and
    the live P-values on the right. On a phone the chain becomes a scrolling strip and the result a bottom bar. */
@@ -533,6 +539,9 @@ body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48p
 </style>
 <div id="app"><noscript>This tool needs JavaScript to run.</noscript></div>
 <script>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Calculation core. Pure functions, no DOM.
    Units: wind speed m/s, power MW, energy GWh/yr, uncertainties in percent (1.5 = 1.5 %). */
 const Engine = (() => {
@@ -1198,6 +1207,9 @@ if (typeof module !== 'undefined') module.exports = Engine;
 
 </script>
 <script>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Item library: every uncertainty and loss item, its input modes, defaults, sources and explanations.
    Values are percentages. Wind-speed items ('ws') are relative wind speed uncertainty;
    energy items ('en') are relative energy uncertainty; loss items carry a loss L (%) and its
@@ -2322,6 +2334,9 @@ if (typeof module !== 'undefined') module.exports = Library;
 
 </script>
 <script>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Hourly storage and firm-supply engine. Pure functions, no DOM.
    Builds hourly wind and solar profiles (generated or uploaded), dispatches a battery against a demand
    profile, scores demand-fulfilment rules, and runs a Monte Carlo over resource, weather sequence and
@@ -2752,6 +2767,9 @@ if (typeof module !== 'undefined') module.exports = Firm;
 
 </script>
 <script>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Plant: places every uncertainty item on a part of the plant drawing (a component) and in a
    category within it, and adds up each part's share of the energy uncertainty. No DOM.
    Shares come from Engine contributions, so the parts add up to the plant total in variance:
@@ -2918,6 +2936,9 @@ if (typeof module !== 'undefined') module.exports = Plant;
 
 </script>
 <script>
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Interface. Vanilla JS: state → evaluate → render. Inputs update state and live values in place
    so focus is never lost; structural changes re-render the current stage. */
 (() => {
@@ -4016,6 +4037,9 @@ if (typeof module !== 'undefined') module.exports = Plant;
     try { history.replaceState(null, '', '#' + id); } catch (e) { /* ignore */ }
   }
 
+  /* WattOdds — energy yield uncertainty, source to meter.
+     Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+     SPDX-License-Identifier: Apache-2.0 */
   /* ======================= Plant view =======================
      A drawing of the plant. Each part carries a badge with its share of the energy uncertainty;
      selecting a part pops its categories out as bubbles, and the inspector beside the drawing
@@ -4916,7 +4940,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
     o.innerHTML = `<div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
       <header><h3 id="ovTitle">${overlay.kind === 'export' ? 'Export' : 'Projects'}</h3><button class="btn small ghost" data-act="close" aria-label="Close">Close</button></header>
       ${overlay.kind === 'export' ? exportSec + projSec : projSec + exportSec}
-      <p class="status" id="ovStatus">${esc(opts.status || '')}</p></div>`;
+      <p class="status" id="ovStatus">${esc(opts.status || '')}</p>
+      <p class="side-note">WattOdds is open source under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. <a href="https://github.com/coderenewables/renewables-uncertainty" target="_blank" rel="noopener">Source code on GitHub</a>.</p></div>`;
   }
   function setOvStatus(s) { const el = $('#ovStatus'); if (el) el.textContent = s; }
 

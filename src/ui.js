@@ -1,3 +1,6 @@
+/* WattOdds — energy yield uncertainty, source to meter.
+   Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+   SPDX-License-Identifier: Apache-2.0 */
 /* Interface. Vanilla JS: state → evaluate → render. Inputs update state and live values in place
    so focus is never lost; structural changes re-render the current stage. */
 (() => {
@@ -1271,7 +1274,8 @@
     o.innerHTML = `<div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
       <header><h3 id="ovTitle">${overlay.kind === 'export' ? 'Export' : 'Projects'}</h3><button class="btn small ghost" data-act="close" aria-label="Close">Close</button></header>
       ${overlay.kind === 'export' ? exportSec + projSec : projSec + exportSec}
-      <p class="status" id="ovStatus">${esc(opts.status || '')}</p></div>`;
+      <p class="status" id="ovStatus">${esc(opts.status || '')}</p>
+      <p class="side-note">WattOdds is open source under the <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License 2.0</a>. <a href="https://github.com/coderenewables/renewables-uncertainty" target="_blank" rel="noopener">Source code on GitHub</a>.</p></div>`;
   }
   function setOvStatus(s) { const el = $('#ovStatus'); if (el) el.textContent = s; }
 
