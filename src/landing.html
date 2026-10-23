@@ -1,0 +1,447 @@
+<!-- WattOdds landing page (coderenewables.com).
+     Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+     SPDX-License-Identifier: Apache-2.0 -->
+<title>WattOdds</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="WattOdds: energy yield uncertainty for wind, solar, hybrids and storage, from the source to the meter.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='45' width='9' height='11' rx='2.5' fill='%23d9480f' fill-opacity='.45'/%3E%3Crect x='16' y='34' width='9' height='22' rx='2.5' fill='%23d9480f'/%3E%3Crect x='28' y='12' width='9' height='44' rx='2.5' fill='%23d9480f'/%3E%3Crect x='40' y='23' width='9' height='33' rx='2.5' fill='%23d9480f'/%3E%3Crect x='52' y='45' width='9' height='11' rx='2.5' fill='%23d9480f'/%3E%3C/svg%3E">
+<link rel="canonical" href="https://coderenewables.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://coderenewables.com/">
+<meta property="og:title" content="WattOdds">
+<meta property="og:description" content="Energy yield uncertainty for wind, solar, hybrids and storage, from the mast to the meter. Free and open source.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,500..800&family=Atkinson+Hyperlegible+Next:wght@200..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: the app's own system. A two-part hero (the pitch and the big button on the left, a live
+   odds plot from the app's example on the right), then the chain from source to meter on a white
+   band, four short points, and the button again. Colours and type match WattOdds itself. */
+:root {
+  --paper: #f2f5f5;
+  --surface: #ffffff;
+  --sunk: #e8edee;
+  --ink: #10212a;
+  --ink-2: #44565f;
+  --ink-3: #66777f;
+  --line: #d5dde0;
+  --line-2: #b9c5ca;
+  --accent: #d9480f;
+  --accent-ink: #b23a0b;
+  --accent-wash: #fcebe2;
+  --on-accent: #ffffff;
+  --ev-calc: #104281;
+  --ev-site: #256abf;
+  --ev-desc: #5598e7;
+  --ev-generic: #86b6ef;
+  --shadow: 0 1px 2px rgba(16, 33, 42, 0.06), 0 10px 32px rgba(16, 33, 42, 0.07);
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible Next", "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --wrap: 1160px;
+  --gutter: clamp(16px, 4vw, 36px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0b1418; --surface: #111d22; --sunk: #0d181c; --ink: #e3ecee; --ink-2: #a9b9be; --ink-3: #8193a0;
+    --line: #22333a; --line-2: #31464e; --accent: #ff6b35; --accent-ink: #ff8f63; --accent-wash: #331a10; --on-accent: #10161a;
+    --ev-calc: #9ec5f4; --ev-site: #5598e7; --ev-desc: #2a78d6; --ev-generic: #184f95;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 32px rgba(0, 0, 0, 0.28);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0b1418; --surface: #111d22; --sunk: #0d181c; --ink: #e3ecee; --ink-2: #a9b9be; --ink-3: #8193a0;
+  --line: #22333a; --line-2: #31464e; --accent: #ff6b35; --accent-ink: #ff8f63; --accent-wash: #331a10; --on-accent: #10161a;
+  --ev-calc: #9ec5f4; --ev-site: #5598e7; --ev-desc: #2a78d6; --ev-generic: #184f95;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 32px rgba(0, 0, 0, 0.28);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55; -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.wrap {
+  max-width: var(--wrap); margin-inline: auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+}
+
+/* ---------- header ---------- */
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--ink); }
+.brand svg { flex: none; }
+.brand-name { font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 1.2rem; line-height: 1.1; letter-spacing: -0.01em; }
+.brand-name .odds { color: var(--accent-ink); }
+.brand-sub { font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-2); }
+
+/* ---------- hero ---------- */
+.hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(32px, 5vw, 64px); align-items: center; padding-block: clamp(24px, 5vw, 64px) clamp(48px, 7vw, 88px); }
+.pitch { display: grid; gap: 22px; justify-items: start; min-width: 0; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.78rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+h1 { font-weight: 800; font-stretch: 116%; font-size: clamp(2.2rem, 1.3rem + 3.4vw, 3.75rem); line-height: 1.02; letter-spacing: -0.022em; max-width: 15ch; }
+.lead { font-size: clamp(1.05rem, 1rem + 0.3vw, 1.2rem); color: var(--ink-2); max-width: 54ch; }
+.lead b { color: var(--ink); font-weight: 700; }
+.go {
+  display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+  min-height: 70px; padding: 0 36px; border-radius: 14px;
+  background: var(--accent); color: var(--on-accent); text-decoration: none;
+  font-family: var(--f-display); font-stretch: 112%; font-weight: 800; font-size: 1.4rem; letter-spacing: -0.005em;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 14px 30px -12px var(--accent);
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+}
+.go svg { flex: none; transition: transform 0.2s ease; }
+.go:hover { filter: brightness(1.07); transform: translateY(-2px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 18px 34px -12px var(--accent); }
+.go:hover svg { transform: translateX(4px); }
+.go:active { transform: translateY(0); }
+.go:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; border-radius: 14px; }
+.go-note { font-size: 0.86rem; color: var(--ink-2); margin-top: -8px; }
+
+/* ---------- odds plot ---------- */
+.odds-card { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: 18px 18px 16px; display: grid; gap: 12px; min-width: 0; }
+.odds-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.odds-title { display: grid; gap: 1px; }
+.odds-title h2 { font-size: 1.02rem; font-weight: 700; font-stretch: 108%; }
+.odds-title span { font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-2); }
+.hz { display: flex; background: var(--sunk); border-radius: 9px; padding: 3px; gap: 2px; }
+.hz button { border: 0; background: transparent; padding: 6px 12px; border-radius: 7px; font: inherit; font-size: 0.82rem; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.hz button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14); }
+.plot { width: 100%; display: block; overflow: visible; }
+.plot .dot { fill: var(--accent); transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.plot .dot.below { fill-opacity: 0.32; }
+.plot .rule { stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; fill: none; }
+.plot .rule.p50 { stroke-width: 1.4; stroke-dasharray: 3 4; }
+.plot .mark { transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.plot .axis { stroke: var(--line-2); stroke-width: 1; }
+.plot .tick { fill: var(--ink-2); font-family: var(--f-mono); font-size: 11px; }
+.plot .unit { fill: var(--ink-2); font-family: var(--f-body); font-size: 11px; }
+.plot .lab { fill: var(--ink); font-family: var(--f-display); font-weight: 800; font-size: 13px; }
+.plot .lab tspan.v { font-family: var(--f-mono); font-weight: 500; font-size: 12px; fill: var(--ink-2); }
+.readout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.readout div { display: grid; gap: 1px; min-width: 0; }
+.readout dt { font-size: 0.76rem; color: var(--ink-2); }
+.readout dd { margin: 0; font-family: var(--f-mono); font-size: 0.98rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.readout dd small { display: block; font-weight: 400; font-size: 0.74rem; color: var(--ink-2); }
+.cap { font-size: 0.82rem; color: var(--ink-2); }
+
+/* ---------- chain band ---------- */
+.band { background: var(--surface); border-block: 1px solid var(--line); }
+.band .wrap { padding-block: clamp(40px, 6vw, 72px); display: grid; gap: clamp(24px, 4vw, 36px); }
+.sec-head { display: grid; gap: 8px; max-width: 62ch; }
+h2.sec { font-size: clamp(1.5rem, 1.1rem + 1.4vw, 2.1rem); font-weight: 800; font-stretch: 112%; letter-spacing: -0.015em; line-height: 1.1; }
+.sec-head p { color: var(--ink-2); }
+.chains { display: grid; gap: 28px; }
+.chain { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 16px; align-items: start; }
+.chain h3 { font-family: var(--f-mono); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); padding-top: 4px; }
+.chain ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); position: relative; }
+.chain ol::before { content: ""; position: absolute; top: 11px; height: 2px; left: calc(50% / var(--n)); right: calc(50% / var(--n)); background: repeating-linear-gradient(to right, var(--line-2) 0 10px, var(--line) 10px 20px); }
+.chain li { position: relative; display: grid; justify-items: center; align-content: start; gap: 8px; text-align: center; padding-inline: 4px; min-width: 0; }
+.chain li i { width: 24px; height: 24px; display: grid; place-items: center; }
+.chain li i::after { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); border: 2px solid var(--line-2); }
+.chain li.meter i::after { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-wash); }
+.chain li span { font-size: 0.86rem; font-weight: 600; line-height: 1.25; color: var(--ink-2); overflow-wrap: anywhere; }
+.chain li.meter span { color: var(--ink); font-weight: 700; }
+.chain-note { color: var(--ink-2); font-size: 0.92rem; max-width: 70ch; }
+
+/* ---------- points ---------- */
+.points { padding-block: clamp(44px, 6vw, 80px); display: grid; gap: clamp(22px, 3vw, 32px); }
+.pts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px; }
+.pt { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; padding-top: 16px; border-top: 2px solid var(--ink); min-width: 0; }
+.pt h3 { font-size: 1.12rem; font-weight: 750; font-stretch: 108%; line-height: 1.2; }
+.pt p { color: var(--ink-2); font-size: 0.94rem; }
+.pt-foot { display: flex; flex-wrap: wrap; gap: 4px 12px; font-family: var(--f-mono); font-size: 0.74rem; color: var(--ink-2); padding-top: 4px; }
+.pt-foot .ev { display: inline-flex; align-items: center; gap: 5px; }
+.pt-foot .ev i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.ev-calc { background: var(--ev-calc); } .ev-site { background: var(--ev-site); } .ev-desc { background: var(--ev-desc); } .ev-generic { background: var(--ev-generic); }
+
+/* ---------- end ---------- */
+.end { border-top: 1px solid var(--line); }
+.end .wrap { padding-block: clamp(36px, 5vw, 56px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 32px; }
+.end-text { font-family: var(--f-display); font-stretch: 108%; font-weight: 700; font-size: clamp(1.15rem, 1rem + 0.6vw, 1.45rem); line-height: 1.25; max-width: 34ch; }
+.foot .wrap { padding-block: 0 32px; font-size: 0.8rem; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 16px; }
+
+/* ---------- narrower screens ---------- */
+@media (max-width: 1000px) { .pts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); }
+  h1 { max-width: 18ch; }
+}
+@media (max-width: 720px) {
+  .chains { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .chain { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .chain ol { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .chain ol::before { top: 12px; bottom: 12px; left: 11px; right: auto; width: 2px; height: auto; background: repeating-linear-gradient(to bottom, var(--line-2) 0 10px, var(--line) 10px 20px); }
+  .chain li { grid-template-columns: 24px minmax(0, 1fr); justify-items: start; align-items: start; text-align: left; gap: 8px; padding-inline: 0; }
+  .chain li span { padding-top: 2px; font-size: 0.84rem; }
+}
+@media (max-width: 560px) {
+  .pts { grid-template-columns: minmax(0, 1fr); }
+  .go { width: 100%; padding: 0 20px; }
+  .end .wrap { display: grid; }
+  .odds-card { padding: 14px 12px 12px; }
+}
+@media (max-width: 380px) {
+  .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true"><circle cx="10" cy="50" r="5" fill="var(--accent)" fill-opacity="0.32"/><circle cx="21" cy="50" r="5" fill="var(--accent)"/><circle cx="21" cy="39" r="5" fill="var(--accent)"/><circle cx="32" cy="50" r="5" fill="var(--accent)"/><circle cx="32" cy="39" r="5" fill="var(--accent)"/><circle cx="32" cy="28" r="5" fill="var(--accent)"/><circle cx="32" cy="17" r="5" fill="var(--accent)"/><circle cx="43" cy="50" r="5" fill="var(--accent)"/><circle cx="43" cy="39" r="5" fill="var(--accent)"/><circle cx="43" cy="28" r="5" fill="var(--accent)"/><circle cx="54" cy="50" r="5" fill="var(--accent)"/><path d="M15.5,10 V58" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" fill="none"/></svg>
+      <div>
+        <div class="brand-name">Watt<span class="odds">Odds</span></div>
+        <div class="brand-sub">energy yield uncertainty · source to meter</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap" aria-labelledby="h1">
+    <div class="pitch">
+      <p class="eyebrow">Wind · Solar PV · Hybrid · Battery storage</p>
+      <h1 id="h1">Energy yield uncertainty, from the mast to the meter.</h1>
+      <p class="lead"><b>WattOdds</b> builds up the uncertainty of a renewable energy project one item at a time, from the measurement on site to the point of interconnection. Use whatever information you have, and get P50, P90 and P99 values you can trace back to every assumption.</p>
+      <a class="go" id="go-hero" href="app/">
+        Open WattOdds
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <p class="go-note">Free and open source. Opens on a worked example.</p>
+    </div>
+
+    <figure class="odds-card" aria-labelledby="odds-title">
+      <div class="odds-head">
+        <div class="odds-title">
+          <h2 id="odds-title">Example wind farm</h2>
+          <span>28 × 3.3 MW · fictional, ships with the app</span>
+        </div>
+        <div class="hz" role="group" aria-label="Period">
+          <button type="button" id="hz-1" data-h="1" aria-pressed="false">1 year</button>
+          <button type="button" id="hz-10" data-h="10" aria-pressed="true">10 years</button>
+        </div>
+      </div>
+      <svg class="plot" id="odds-plot" role="img" aria-label="Dot plot of 50 equally likely outcomes for annual energy" viewBox="0 0 520 200" height="200"></svg>
+      <dl class="readout">
+        <div><dt>P50</dt><dd id="r-p50">299.5 <small>GWh/yr</small></dd></div>
+        <div><dt>P90</dt><dd id="r-p90">266.1 <small>88.9 % of P50</small></dd></div>
+        <div><dt>Uncertainty (σ)</dt><dd id="r-sig">8.70 % <small>10-year average</small></dd></div>
+      </dl>
+      <figcaption class="cap" id="odds-cap">Each dot is one of 50 equally likely outcomes for the average yearly energy at the meter over 10 years. The five pale dots fall below P90.</figcaption>
+    </figure>
+  </section>
+
+  <section class="band" aria-labelledby="chain-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="sec" id="chain-h">Every step from the source to the meter</h2>
+        <p>Uncertainty builds up stage by stage, in the same order as an energy yield assessment. Each stage holds the items that belong to it.</p>
+      </div>
+      <div class="chains">
+        <div class="chain">
+          <h3>Wind</h3>
+          <ol style="--n: 8">
+            <li><i></i><span>Measurement</span></li>
+            <li><i></i><span>Long-term wind</span></li>
+            <li><i></i><span>Vertical extrapolation</span></li>
+            <li><i></i><span>Horizontal extrapolation</span></li>
+            <li><i></i><span>Future variability</span></li>
+            <li><i></i><span>Wind to energy</span></li>
+            <li><i></i><span>Plant losses</span></li>
+            <li class="meter"><i></i><span>Point of interconnection</span></li>
+          </ol>
+        </div>
+        <div class="chain">
+          <h3>Solar PV</h3>
+          <ol style="--n: 6">
+            <li><i></i><span>Irradiance data</span></li>
+            <li><i></i><span>Long-term and variability</span></li>
+            <li><i></i><span>Plane of array</span></li>
+            <li><i></i><span>PV conversion</span></li>
+            <li><i></i><span>Plant losses</span></li>
+            <li class="meter"><i></i><span>Point of interconnection</span></li>
+          </ol>
+        </div>
+      </div>
+      <p class="chain-note">Hybrids put wind and solar behind one grid connection and count the shared losses once. A battery adds storage and firm-supply stages, simulated hour by hour.</p>
+    </div>
+  </section>
+
+  <section class="points wrap" aria-labelledby="pts-h">
+    <h2 class="sec" id="pts-h">What WattOdds does</h2>
+    <div class="pts">
+      <article class="pt">
+        <h3>Works with what you have</h3>
+        <p>For each item, calculate it, describe the site, enter a value from a report or use a cited default. The results show how much of the total rests on generic values.</p>
+        <div class="pt-foot">
+          <span class="ev"><i class="ev-calc"></i>Calculated</span>
+          <span class="ev"><i class="ev-site"></i>Site value</span>
+          <span class="ev"><i class="ev-desc"></i>Site description</span>
+          <span class="ev"><i class="ev-generic"></i>Generic</span>
+        </div>
+      </article>
+      <article class="pt">
+        <h3>81 items, each sourced</h3>
+        <p>Instruments, long-term correction, flow models, wakes, soiling, availability, curtailment and more. Each item says what drives it, how to reduce it and where its numbers come from.</p>
+        <div class="pt-foot"><span>IEC 61400-15-2</span><span>IEA PVPS Task 13</span></div>
+      </article>
+      <article class="pt">
+        <h3>Odds you can act on</h3>
+        <p>P-values for one year, ten years and the plant's life, checked by Monte Carlo. A ranked list shows which items would lift P90 most if you reduced them. Export it all to Excel.</p>
+        <div class="pt-foot"><span>P50 · P75 · P90 · P95 · P99</span></div>
+      </article>
+      <article class="pt">
+        <h3>Hybrids and storage</h3>
+        <p>Wind and solar behind one connection, with their correlation and the export limit. Add a battery and test each hour against firm-supply rules.</p>
+        <div class="pt-foot"><span>SECI FDRE presets</span><span>8,760 hours</span></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="end" aria-label="Open the app">
+    <div class="wrap">
+      <p class="end-text">See a full assessment on the example, then start your own project.</p>
+      <a class="go" id="go-end" href="app/">
+        Open WattOdds
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© 2026 Nithish Seenivasagam · coderenewables.com</span>
+    <span>Open source under the Apache License 2.0 · <a href="https://github.com/coderenewables/renewables-uncertainty">Source on GitHub</a></span>
+    <span>The example project is fictional.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const h = location.hash.slice(1);
+  if (/^(project|measurement|historical|vertical|horizontal|future|conversion|losses|poi|irradiance|solar_lt|poa|pvconv|pvlosses|hybrid|bess|supply|results)$/.test(h)) location.replace('app/#' + h);
+})();
+</script>
+<script>
+(() => {
+  /* Example wind farm from WattOdds (Library.exampleProject), net energy at the meter.
+     The app reports Pxx = P50 × (1 − z × σ). */
+  const EX = {
+    1:  { p50: 299.4855, sigma: 0.1041053 },
+    10: { p50: 299.4855, sigma: 0.0870004 },
+  };
+  const N = 50, Z90 = 1.2815516, X0 = 210, X1 = 390, NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('odds-plot');
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let horizon = 10, dots = [], marks = {}, axis, ticks, first = true;
+
+  function invNorm(p) {
+    const a = [-39.69683028665376, 220.9460984245205, -275.9285104469687, 138.357751867269, -30.66479806614716, 2.506628277459239];
+    const b = [-54.47609879822406, 161.5858368580409, -155.6989798598866, 66.80131188771972, -13.28068155288572];
+    const c = [-0.007784894002430293, -0.3223964580411365, -2.400758277161838, -2.549732539343734, 4.374664141464968, 2.938163982698783];
+    const d = [0.007784695709041462, 0.3224671290700398, 2.445134137142996, 3.754408661907416];
+    const pl = 0.02425;
+    if (p < pl) { const q = Math.sqrt(-2 * Math.log(p)); return (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5]) / ((((d[0] * q + d[1]) * q + d[2]) * q + d[3]) * q + 1); }
+    if (p > 1 - pl) return -invNorm(1 - p);
+    const q = p - 0.5, r = q * q;
+    return (((((a[0] * r + a[1]) * r + a[2]) * r + a[3]) * r + a[4]) * r + a[5]) * q / (((((b[0] * r + b[1]) * r + b[2]) * r + b[3]) * r + b[4]) * r + 1);
+  }
+  const el = (name, attrs, parent) => { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+  const f1 = v => v.toFixed(1);
+
+  /* quantile dots, binned so a bin edge falls exactly on P90 */
+  function stacks(h, w) {
+    const { p50, sigma } = EX[h], p90 = p50 * (1 - Z90 * sigma), count = {};
+    const pts = [];
+    for (let i = 0; i < N; i++) {
+      const v = p50 * (1 + sigma * invNorm((i + 0.5) / N));
+      const k = Math.floor((v - p90) / w + 1e-9);
+      const j = count[k] = (count[k] || 0) + 1;
+      pts.push({ i, centre: p90 + (k + 0.5) * w, level: j - 1, below: v < p90 });
+    }
+    return { pts, p50, p90, sigma, max: Math.max(...Object.values(count)) };
+  }
+
+  function build() {
+    axis = el('line', { class: 'axis' }, svg);
+    ticks = el('g', {}, svg);
+    for (const key of ['p90', 'p50']) {
+      const g = el('g', { class: 'mark' }, svg);
+      const line = el('line', { class: 'rule ' + key, x1: 0, x2: 0 }, g);
+      const t = el('text', { class: 'lab', 'text-anchor': key === 'p90' ? 'end' : 'start', x: key === 'p90' ? -8 : 8 }, g);
+      const name = el('tspan', {}, t); name.textContent = key.toUpperCase() + ' ';
+      const val = el('tspan', { class: 'v' }, t);
+      marks[key] = { g, line, t, val };
+    }
+    for (let i = 0; i < N; i++) dots.push(el('circle', { class: 'dot' + (i < 5 ? ' below' : ''), cx: 0, cy: 0, r: 6 }, svg));
+  }
+
+  function render() {
+    const W = Math.max(260, Math.round(svg.getBoundingClientRect().width || 520));
+    const padL = 10, padR = 10, k = (W - padL - padR) / (X1 - X0);
+    const x = v => padL + (v - X0) * k;
+    let w = 6; while (w * k < 13 && w < 12) w += 1;
+    const d = w * k, r = Math.max(3, d / 2 - 1.4);
+    const maxStack = Math.max(stacks(1, w).max, stacks(10, w).max);
+    const top = 30, base = top + 10 + maxStack * d, H = base + 46;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('height', H);
+
+    axis.setAttribute('x1', padL); axis.setAttribute('x2', W - padR);
+    axis.setAttribute('y1', base + 0.5); axis.setAttribute('y2', base + 0.5);
+    ticks.textContent = '';
+    const step = k * 20 < 34 ? 40 : 20;
+    for (let v = 220; v <= 380; v += step) {
+      el('line', { class: 'axis', x1: x(v), x2: x(v), y1: base, y2: base + 5 }, ticks);
+      const t = el('text', { class: 'tick', x: x(v), y: base + 19, 'text-anchor': 'middle' }, ticks); t.textContent = v;
+    }
+    const u = el('text', { class: 'unit', x: W - padR, y: base + 37, 'text-anchor': 'end' }, ticks); u.textContent = 'GWh per year';
+
+    const s = stacks(horizon, w);
+    s.pts.forEach(p => {
+      const c = dots[p.i];
+      c.setAttribute('r', r.toFixed(2));
+      const tx = x(p.centre), ty = base - d / 2 - p.level * d;
+      c.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`;
+      if (first && !reduce && c.animate) {
+        c.animate([{ transform: `translate(${tx.toFixed(2)}px, ${(ty - 26).toFixed(2)}px)` }, { transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)` }],
+          { duration: 460, delay: 120 + p.i * 12, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' });
+      }
+    });
+    for (const key of ['p90', 'p50']) {
+      const m = marks[key], v = s[key];
+      m.g.style.transform = `translate(${x(v).toFixed(2)}px, 0px)`;
+      m.line.setAttribute('y1', top - 14); m.line.setAttribute('y2', base + 2);
+      m.t.setAttribute('y', top - 4);
+      m.val.textContent = f1(v);
+    }
+    first = false;
+
+    const pct = (s.p90 / s.p50 * 100).toFixed(1);
+    document.getElementById('r-p50').innerHTML = `${f1(s.p50)} <small>GWh/yr</small>`;
+    document.getElementById('r-p90').innerHTML = `${f1(s.p90)} <small>${pct} % of P50</small>`;
+    document.getElementById('r-sig').innerHTML = `${(s.sigma * 100).toFixed(2)} % <small>${horizon === 1 ? 'single year' : '10-year average'}</small>`;
+    document.getElementById('odds-cap').textContent = horizon === 1
+      ? 'Each dot is one of 50 equally likely outcomes for the energy at the meter in a single year. The five pale dots fall below P90.'
+      : 'Each dot is one of 50 equally likely outcomes for the average yearly energy at the meter over 10 years. The five pale dots fall below P90.';
+    svg.setAttribute('aria-label', `Dot plot of 50 equally likely outcomes, ${horizon === 1 ? 'one year' : '10-year average'}: P50 ${f1(s.p50)} and P90 ${f1(s.p90)} GWh per year, five outcomes below P90.`);
+  }
+
+  document.querySelectorAll('.hz button').forEach(btn => btn.addEventListener('click', () => {
+    horizon = Number(btn.dataset.h);
+    document.querySelectorAll('.hz button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+    render();
+  }));
+
+  build();
+  render();
+  let last = 0;
+  if (window.ResizeObserver) new ResizeObserver(() => { const w = Math.round(svg.getBoundingClientRect().width); if (w && w !== last) { last = w; render(); } }).observe(svg);
+})();
+</script>

@@ -114,6 +114,10 @@ The mark is a dot plot of eleven outcomes with a line marking off one dot, rough
 
 Open source under the Apache License 2.0 (`LICENSE`, `NOTICE`, an SPDX header in each source file, and a line with the source link in the app's Projects and Export panel). Copyright 2026 Nithish Seenivasagam (coderenewables.com).
 
+## Website and landing page
+
+coderenewables.com (GitHub Pages, deployed from `main`) serves a landing page at `/` and the app at `/app/`. The landing page (`src/landing.html`) gives a short description, a big "Open WattOdds" button that opens `app/` in the same tab, a dot plot of the wind example's 50 equally likely outcomes (1-year and 10-year, values from `Library.exampleProject`), the wind and solar chains from source to meter, four short points and a link to the source. `build.py` writes `dist/site/` with full HTML documents; before this the deployed app had no doctype or viewport tag. Old root links to app stages (`/#results`) forward to `/app/`. Saved projects in the browser carry over (same origin).
+
 ## Values to review
 
 Items marked "framework judgement" in the app are starting values set by the tool from cited context, not published figures. They are the first thing for the team to review: mast data integrity, lidar verification/classification/mounting/availability, direction and density, reference consistency, long-term representativeness, distribution and gap filling, shear representativeness, flow model adjustments for model type, distance and number of masts, terrain inputs and sensitivity, power curve, all losses except internal wakes and electrical, and metering.

@@ -22,15 +22,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-      - name: Build single-file page
+      - name: Build the app and the site (landing page at /, app at /app/)
         run: python3 build.py
-      - name: Prepare site
-        run: |
-          mkdir -p _site
-          cp dist/wind-energy-uncertainty.html _site/index.html
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: dist/site
       - id: deployment
         uses: actions/deploy-pages@v4

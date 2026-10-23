@@ -3,3 +3,4 @@ node_modules/
 *.log
 .DS_Store
 tests/out/
+dist/site/
