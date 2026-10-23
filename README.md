@@ -21,6 +21,7 @@ It runs entirely in the browser: one self-contained HTML page (HTML + JavaScript
 ```
 src/
   index.html     page skeleton (fonts, script slots)
+  landing.html   landing page for coderenewables.com (buttons open app/)
   styles.css     all styles, light and dark
   engine.js      analytical engine and Monte Carlo (no DOM)
   library.js     uncertainty items, defaults, explanations, sources, examples
@@ -28,8 +29,9 @@ src/
   plant.js       places every item on a plant part and category; part totals (no DOM)
   plantview.js   plant drawing and inspector (inlined into ui.js at build time)
   ui.js          interface
-build.py         concatenates src/ into dist/wind-energy-uncertainty.html
-dist/            the built single-file page (file name kept from before the rename so existing links keep working)
+build.py         concatenates src/ into dist/wind-energy-uncertainty.html and builds the website in dist/site/
+dist/            the built single-file page (file name kept from before the rename so existing links keep working);
+                 dist/site/ is the website (built, not committed)
 tests/           unit tests (node) and browser checks (Playwright)
 docs/            decisions and build notes
 ```
@@ -39,6 +41,10 @@ docs/            decisions and build notes
 ```
 python3 build.py
 ```
+
+## Website
+
+coderenewables.com is deployed by GitHub Pages on every push to `main` (`.github/workflows/pages.yml`). The landing page (`src/landing.html`) is served at `/` and the app at `/app/`. `build.py` wraps both in a full HTML document (doctype, charset, viewport). Old links to an app stage on the root, such as `/#results`, are forwarded to `/app/#results`.
 
 ## Tests
 
