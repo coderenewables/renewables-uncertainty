@@ -2,7 +2,7 @@
 
 *Watt are the odds?*
 
-WattOdds (formerly "Wind Energy Uncertainty") is a framework tool for renewable project developers and owners to capture and calculate energy yield uncertainty across the whole project chain — from the wind mast or lidar (or irradiance data) to the point of interconnection — for wind, solar PV, wind + solar hybrids, and hybrids with battery storage.
+WattOdds is a framework tool for renewable project developers and owners to capture and calculate energy yield uncertainty across the whole project chain — from the wind mast or lidar (or irradiance data) to the point of interconnection — for wind, solar PV, wind + solar hybrids, and hybrids with battery storage.
 
 It runs entirely in the browser: one self-contained HTML page (HTML + JavaScript + CSS), no server.
 
