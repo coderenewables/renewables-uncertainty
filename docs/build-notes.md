@@ -28,7 +28,7 @@ Published page: https://claude.ai/artifact/4FxesQ58JQEtbUwiz6N6QP (private until
 
 **Information levels:** on-site (mast and/or lidar, any number) or desktop only (wind atlas σ 10.5 %, from RINA's 50-mast benchmark).
 
-**Saving and export:** current project autosaves in the browser; "My projects" saves privately per user (cloud, any device); Excel workbook (sheets: Summary, Register, Inputs, Sources) and JSON project file via the viewer's download prompt; JSON import.
+**Saving and export:** current project autosaves in the browser; "My projects" saves named projects in the browser's local storage (this device only, nothing sent anywhere); Excel workbook (sheets: Summary, Register, Inputs, Sources) and JSON project file download directly; JSON import moves projects between devices. The app has no dependency on claude.ai: it runs as a plain static page.
 
 **Example project** (fictional, flagged in the app): 28 × 3.3 MW, 156 m rotor, 140 m hub, 6.8 m/s, moderate terrain, 100 m mast + on-site lidar. Net P50 299.5 GWh/yr, 10-year σ 8.70 %, P90 266.1 GWh/yr (88.9 % of P50). Largest contributor: flow model suitability (32 % of variance).
 

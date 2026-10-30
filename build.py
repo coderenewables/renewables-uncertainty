@@ -3,8 +3,8 @@ root = pathlib.Path(__file__).parent
 src = root / 'src'
 dist = root / 'dist'
 
-# 1. The app as one self-contained page fragment (published as a Claude artifact,
-#    which adds the document skeleton itself).
+# 1. The app as one self-contained page fragment (no document skeleton; step 2
+#    wraps it for the website).
 html = (src / 'index.html').read_text()
 for tag, f in [('CSS', 'styles.css'), ('ENGINE', 'engine.js'), ('LIBRARY', 'library.js'), ('BESS', 'bess.js'), ('PLANT', 'plant.js'), ('UI', 'ui.js')]:
     body = (src / f).read_text()

@@ -11,8 +11,8 @@
 
   let state = null, result = null, stage = 'project';
   let mc = null, mcKey = '', mcRunning = false;
-  const caps = { db: null, uid: null, dl: null, ready: false };
-  let cloud = { list: [], status: '', unsub: null, savedStamp: null };
+  const PROJ_KEY = 'wattodds:projects:v1';
+  let cloud = { list: [], status: '', savedStamp: null };
   let overlay = null;
 
   /* ---------- small helpers ---------- */
@@ -172,7 +172,7 @@
     n.textContent = state.meta.name || 'Untitled project';
     const saved = cloud.savedStamp && cloud.savedStamp === state.meta.updated;
     $('#projTags').innerHTML = (state.meta.example ? '<span class="tag">Example values</span> ' : '') +
-      (caps.db && caps.uid ? `<span class="tag save">${saved ? 'Saved' : 'Not saved to projects'}</span>` : '');
+      `<span class="tag save">${saved ? 'Saved' : 'Not saved to projects'}</span>`;
   }
 
   function updateChrome() { renderRail(); renderSide(); updateSaveTag(); }
@@ -1254,18 +1254,17 @@
     if (!overlay) return;
     let o = $('#overlay');
     if (!o) { o = document.createElement('div'); o.id = 'overlay'; o.className = 'overlay'; o.addEventListener('click', ev => { if (ev.target === o) closeOverlay(); }); document.body.appendChild(o); }
-    const cloudOk = caps.db && caps.uid;
     const list = cloud.list.map(p => {
       const confirm = opts.confirmDel === p.id;
       return `<div class="prow"><div style="min-width:0"><div class="pn">${esc(p.name || 'Untitled')}${p.id === state.meta.id ? ' <span class="tag save">open</span>' : ''}</div><div class="pd">${esc(p.updated ? new Date(p.updated).toLocaleString() : '')}</div></div>
         <div class="pa">${confirm ? `<span class="status">Delete permanently?</span><button class="btn small danger" data-act="delyes" data-id="${esc(p.id)}">Delete</button><button class="btn small" data-act="cancel">Keep</button>` : `<button class="btn small" data-act="open" data-id="${esc(p.id)}">Open</button><button class="btn small ghost danger" data-act="del" data-id="${esc(p.id)}">Delete</button>`}</div></div>`;
     }).join('');
-    const replace = opts.confirmReplace ? `<div class="warn">This replaces the project in the editor. ${cloudOk ? 'Save it first if you want to keep it in your projects.' : 'Export it first if you want to keep it.'} <div style="margin-top:8px;display:flex;gap:8px"><button class="btn small primary" data-act="replaceyes" data-kind="${opts.confirmReplace}">${{ 'new-wind': 'Start new wind project', 'new-solar': 'Start new solar project', 'new-hybrid': 'Start new hybrid project', 'example-wind': 'Load wind example', 'example-solar': 'Load solar example', 'example-hybrid': 'Load hybrid example', 'example-bess': 'Load storage example' }[opts.confirmReplace] || 'Replace'}</button><button class="btn small" data-act="cancel">Cancel</button></div></div>` : '';
-    const exportSec = `<section class="stack" style="gap:8px"><h4>Export</h4>${caps.dl ? `<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="xlsx">Excel workbook (.xlsx)</button><button class="btn" data-act="json">Project file (.json)</button></div><p class="side-note">The workbook holds the P-values, the full uncertainty register with its category labels and losses, the inputs, and the sources.</p>` : '<p class="note">Downloads are not available in this view. Open the page in claude.ai to export.</p>'}</section>`;
+    const replace = opts.confirmReplace ? `<div class="warn">This replaces the project in the editor. Save it first if you want to keep it in your projects. <div style="margin-top:8px;display:flex;gap:8px"><button class="btn small primary" data-act="replaceyes" data-kind="${opts.confirmReplace}">${{ 'new-wind': 'Start new wind project', 'new-solar': 'Start new solar project', 'new-hybrid': 'Start new hybrid project', 'example-wind': 'Load wind example', 'example-solar': 'Load solar example', 'example-hybrid': 'Load hybrid example', 'example-bess': 'Load storage example' }[opts.confirmReplace] || 'Replace'}</button><button class="btn small" data-act="cancel">Cancel</button></div></div>` : '';
+    const exportSec = `<section class="stack" style="gap:8px"><h4>Export</h4>${`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="xlsx">Excel workbook (.xlsx)</button><button class="btn" data-act="json">Project file (.json)</button></div><p class="side-note">The workbook holds the P-values, the full uncertainty register with its category labels and losses, the inputs, and the sources.</p>`}</section>`;
     const projSec = `<section class="stack" style="gap:8px"><h4>My projects</h4>
-        ${cloudOk ? `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span></div>
-          <div class="plist">${list || '<p class="side-note">No saved projects yet. Saved projects are private to you and open on any device.</p>'}</div>`
-        : `<p class="note">${caps.ready ? 'Saving to your projects needs you to be signed in to claude.ai.' : 'Connecting…'} Your current project is kept in this browser automatically, and you can export it as a project file.</p>`}
+        ${`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span></div>
+          <div class="plist">${list || '<p class="side-note">No saved projects yet.</p>'}</div>
+          <p class="side-note">Projects are saved in this browser on this device, and nothing is sent anywhere. To move a project to another device or share it, export it as a project file and import it there.</p>`}
       </section>
       <section class="stack" style="gap:8px"><h4>Start or import</h4><div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" data-act="new" data-tech="wind">New wind project</button><button class="btn" data-act="new" data-tech="solar">New solar project</button><button class="btn" data-act="new" data-tech="hybrid">New hybrid project</button>
@@ -1289,57 +1288,48 @@
     recompute(); renderStage(); updateChrome(); renderOverlay({ status: what === 'new' ? `New ${t} project started with generic defaults.` : `${{ wind: 'Wind', solar: 'Solar', hybrid: 'Hybrid', bess: 'Storage' }[t] || 'Wind'} example loaded.` });
   }
 
-  async function initCaps() {
-    const c = window.claude;
-    if (!c || typeof c.use !== 'function') { caps.ready = true; return; }
-    try {
-      const [db, user, dl] = await Promise.all([c.use('db'), c.use('user'), c.use('downloads')]);
-      caps.dl = dl || null;
-      if (db && user) {
-        const id = await user.id();
-        if (id) {
-          caps.db = db; caps.uid = id;
-          try {
-            cloud.unsub = db.collection('data/users/' + id).onSnapshot(snap => {
-              cloud.list = snap.docs.filter(d => d.exists && d.data() && d.data().kind === 'wind-project').map(d => { const b = d.data(); return { id: d.id, name: b.name, updated: b.updated }; }).sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
-              const mine = cloud.list.find(p => p.id === state.meta.id);
-              if (mine && mine.updated === state.meta.updated) cloud.savedStamp = state.meta.updated;
-              updateSaveTag(); if (overlay) renderOverlay({});
-            }, () => { cloud.status = 'Saved projects could not be loaded.'; if (overlay) renderOverlay({}); });
-          } catch (e) { /* listing failed */ }
-        }
-      }
-    } catch (e) { /* capabilities unavailable */ }
-    caps.ready = true; updateSaveTag(); if (overlay) renderOverlay({});
+  /* Saved projects live in this browser's localStorage under PROJ_KEY: { id: { name, updated, project } }. */
+  function readProjects() {
+    try { const o = JSON.parse(localStorage.getItem(PROJ_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; }
+  }
+  function writeProjects(all) { localStorage.setItem(PROJ_KEY, JSON.stringify(all)); }
+  function refreshList() {
+    const all = readProjects();
+    cloud.list = Object.entries(all).map(([id, b]) => ({ id, name: b.name, updated: b.updated })).sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+    const mine = all[state.meta.id];
+    cloud.savedStamp = mine && mine.updated === state.meta.updated ? state.meta.updated : null;
+  }
+  function initCaps() {
+    refreshList(); updateSaveTag(); if (overlay) renderOverlay({});
+    // keep the list in step when another tab saves or deletes
+    window.addEventListener('storage', e => { if (e.key === PROJ_KEY) { refreshList(); updateSaveTag(); if (overlay) renderOverlay({}); } });
   }
 
-  async function saveCloud() {
-    if (!caps.db || !caps.uid) return;
-    const st = $('#cloudStatus'); if (st) st.textContent = 'Saving…';
+  function saveCloud() {
     try {
-      if (!state.meta.id || !/^[A-Za-z0-9_\-.~:@+]+$/.test(state.meta.id)) state.meta.id = uid();
+      if (!state.meta.id) state.meta.id = uid();
       const stamp = new Date().toISOString(); state.meta.updated = stamp;
-      await caps.db.collection('data/users/' + caps.uid).doc(state.meta.id).set({ kind: 'wind-project', name: state.meta.name || 'Untitled', updated: stamp, project: clone(state) });
+      const all = readProjects();
+      all[state.meta.id] = { kind: 'wind-project', name: state.meta.name || 'Untitled', updated: stamp, project: clone(state) };
+      writeProjects(all);
       cloud.savedStamp = stamp; cloud.status = 'Saved ' + new Date(stamp).toLocaleTimeString();
       saveLocal();
     } catch (e) {
-      cloud.status = e && e.code === 'quota_exceeded' ? 'Storage is full. Delete an old project and try again.' : 'Could not save. Your work is still kept in this browser.';
+      cloud.status = 'Could not save: browser storage is full or blocked. Delete an old project, or export this one as a project file.';
     }
-    updateSaveTag(); renderOverlay({});
+    refreshList(); updateSaveTag(); renderOverlay({});
   }
-  async function openCloud(id) {
-    if (!caps.db) return;
-    setOvStatus('Opening…');
+  function openCloud(id) {
+    const b = readProjects()[id];
+    if (!b || !b.project) { refreshList(); renderOverlay({ status: 'That project is no longer there.' }); return; }
     try {
-      const snap = await caps.db.collection('data/users/' + caps.uid).doc(id).get();
-      if (!snap.exists) { setOvStatus('That project is no longer there.'); return; }
-      state = Lb.normalise(snap.data().project); state.meta.id = id;
+      state = Lb.normalise(b.project); state.meta.id = id;
       cloud.savedStamp = state.meta.updated; mc = null; stage = 'project'; saveLocal(); pv.view = null; pv.sel = null; pv.open.clear();
       recompute(); renderStage(); updateChrome(); closeOverlay();
     } catch (e) { setOvStatus('Could not open the project.'); }
   }
-  async function deleteCloud(id) {
-    try { await caps.db.collection('data/users/' + caps.uid).doc(id).delete(); renderOverlay({ status: 'Project deleted.' }); }
+  function deleteCloud(id) {
+    try { const all = readProjects(); delete all[id]; writeProjects(all); refreshList(); updateSaveTag(); renderOverlay({ status: 'Project deleted.' }); }
     catch (e) { renderOverlay({ status: 'Could not delete the project.' }); }
   }
 
@@ -1359,10 +1349,16 @@
     fr.readAsText(file);
   }
 
-  async function offerFile(filename, data) {
-    if (!caps.dl) { setOvStatus('Downloads are not available in this view.'); return; }
-    try { await caps.dl.save({ filename, data }); setOvStatus('Saved ' + filename + '.'); }
-    catch (e) { setOvStatus(e && e.code === 'declined' ? 'Download cancelled.' : e && e.code === 'rate_limited' ? 'A download prompt is already open.' : 'The file could not be saved here.'); }
+  function offerFile(filename, data) {
+    try {
+      const blob = data instanceof Blob ? data : new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.style.display = 'none';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setOvStatus('Downloaded ' + filename + '.');
+    } catch (e) { setOvStatus('The file could not be downloaded.'); }
   }
   function exportJson() { offerFile(slug(state.meta.name) + '.uncertainty.json', JSON.stringify(state, null, 2)); }
 
@@ -1441,12 +1437,12 @@
     }
     X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['Key', 'Source', 'Link'], ...Object.entries(Lb.SOURCES).map(([k, s]) => [k, s.t, s.u])]), 'Sources');
     const buf = X.write(wb, { bookType: 'xlsx', type: 'array' });
-    offerFile(slug(state.meta.name) + '-uncertainty.xlsx', new Blob([buf]));
+    offerFile(slug(state.meta.name) + '-uncertainty.xlsx', new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   }
 
   /* ---------- boot ---------- */
-  function start(hot) {
-    const saved = (hot && hot.state) ? hot : loadLocal();
+  function start() {
+    const saved = loadLocal();
     state = saved && saved.state ? Lb.normalise(saved.state) : Lb.exampleProject();
     if (!state.meta.id) state.meta.id = uid();
     const h = (location.hash || '').slice(1);
@@ -1458,9 +1454,7 @@
     document.addEventListener('pointermove', onPointer);
     document.addEventListener('pointerleave', hideTip);
     document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (overlay) { closeOverlay(); return; } if (pvMode() && pv.sel) { pv.sel = null; pv.hot = null; pv.open.clear(); pv.full = false; savePv(); renderPlant(true); } });
-    try { window.claude && window.claude.hot && window.claude.hot.snapshot(() => ({ state, stage })); } catch (e) { /* ignore */ }
     initCaps();
   }
-  const hot = window.claude && window.claude.hot;
-  if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+  start();
 })();
