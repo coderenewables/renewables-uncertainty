@@ -55,9 +55,20 @@ node tests/plant.test.js      # plant parts add up to the total
 node tests/smoke.js  <outdir>             # step-by-step view in a browser
 node tests/plant-ui.js <outdir>           # plant view in a browser
 node tests/export.js <outdir> <xlsx.full.min.js> [solar|hybrid|bess]
+node tests/suite.js <home-page> <loss-stack>  # suite project: LossStack opens in WattOdds with the same P50
 ```
 
 The browser checks use Playwright; the paths to Playwright and Chromium at the top of those files point at the environment they were written in and may need changing.
+
+## Suite project
+
+WattOdds can work on the same project as WindNudge, SolarNudge and LossStack, with the project bar at the top of the page. The shared storage and the bar come from `https://coderenewables.com/suite/v1/suite.js`, loaded deferred. Without it, WattOdds works as before.
+
+- **Reads:** the `lossstack` section (the loss and storage items, the energy and plant values LossStack set) when WattOdds has not yet saved its own; the `windnudge` or `solarnudge` section (sensitivity, wind climate, rating, air density and shear, as the Nudge measured them). New upstream results are offered with **Apply**, never applied silently.
+- **Writes:** its own `wattodds` section: the project and a year-1 summary, 800 ms after the last change.
+- **Add to suite** (in the Projects panel) turns the project in front of you into a suite project, keeping its current state. New project, examples and opening a saved project leave the suite project.
+
+The suite's storage is in the home page repository, `suite/v1/README.md`.
 
 ## Name and logo
 

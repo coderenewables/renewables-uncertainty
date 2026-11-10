@@ -537,6 +537,7 @@ body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48p
 
 </style>
 <div id="app"><noscript>This tool needs JavaScript to run.</noscript></div>
+<script src="https://coderenewables.com/suite/v1/suite.js" defer onerror=""></script>
 <script>
 /* WattOdds — energy yield uncertainty, source to meter.
    Copyright 2026 Nithish Seenivasagam (coderenewables.com)
@@ -3005,7 +3006,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ state, stage })); } catch (e) { /* ignore */ } }, 500);
   }
-  function touch() { state.meta.updated = new Date().toISOString(); saveLocal(); updateSaveTag(); }
+  function touch() { state.meta.updated = new Date().toISOString(); saveLocal(); updateSaveTag(); suiteSchedule(); }
 
   /* ---------- evaluation and scheduling ---------- */
   function recompute() { result = E.evaluate(state, Lb); }
@@ -4856,6 +4857,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     if (act === 'export') { openOverlay('export'); return; }
     if (act === 'close') { closeOverlay(); return; }
     if (act === 'save') { saveCloud(); return; }
+    if (act === 'addsuite') { suiteAddCurrent(); return; }
     if (act === 'open') { openCloud(t.dataset.id); return; }
     if (act === 'del') { renderOverlay({ confirmDel: t.dataset.id }); return; }
     if (act === 'delyes') { deleteCloud(t.dataset.id); return; }
@@ -4927,7 +4929,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     const replace = opts.confirmReplace ? `<div class="warn">This replaces the project in the editor. Save it first if you want to keep it in your projects. <div style="margin-top:8px;display:flex;gap:8px"><button class="btn small primary" data-act="replaceyes" data-kind="${opts.confirmReplace}">${{ 'new-wind': 'Start new wind project', 'new-solar': 'Start new solar project', 'new-hybrid': 'Start new hybrid project', 'example-wind': 'Load wind example', 'example-solar': 'Load solar example', 'example-hybrid': 'Load hybrid example', 'example-bess': 'Load storage example' }[opts.confirmReplace] || 'Replace'}</button><button class="btn small" data-act="cancel">Cancel</button></div></div>` : '';
     const exportSec = `<section class="stack" style="gap:8px"><h4>Export</h4>${`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="xlsx">Excel workbook (.xlsx)</button><button class="btn" data-act="json">Project file (.json)</button></div><p class="side-note">The workbook holds the P-values, the full uncertainty register with its category labels and losses, the inputs, and the sources.</p>`}</section>`;
     const projSec = `<section class="stack" style="gap:8px"><h4>My projects</h4>
-        ${`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span></div>
+        ${`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span>${suiteAddHtml()}</div>
           <div class="plist">${list || '<p class="side-note">No saved projects yet.</p>'}</div>
           <p class="side-note">Projects are saved in this browser on this device, and nothing is sent anywhere. To move a project to another device or share it, export it as a project file and import it there.</p>`}
       </section>
@@ -4945,6 +4947,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
 
   function replaceProject(kind) {
     const [what, t] = String(kind || 'new-wind').split('-');
+    suiteDetach(true);
     state = what === 'new' ? Lb.blankProject(t) : t === 'solar' ? Lb.solarExampleProject() : t === 'hybrid' ? Lb.hybridExampleProject() : t === 'bess' ? Lb.bessExampleProject() : Lb.exampleProject();
     firm.res = null; firm.drivers = null; firm.central = null;
     pv.view = null; pv.sel = null; pv.open.clear(); savePv();
@@ -4987,6 +4990,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
   function openCloud(id) {
     const b = readProjects()[id];
     if (!b || !b.project) { refreshList(); renderOverlay({ status: 'That project is no longer there.' }); return; }
+    suiteDetach(true);
     try {
       state = Lb.normalise(b.project); state.meta.id = id;
       cloud.savedStamp = state.meta.updated; mc = null; stage = 'project'; saveLocal(); pv.view = null; pv.sel = null; pv.open.clear();
@@ -5005,6 +5009,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
       try {
         const o = JSON.parse(fr.result);
         if (!o || !o.plant || !o.items) throw new Error('not a project');
+        suiteDetach(true);
         state = Lb.normalise(o); if (!state.meta.id) state.meta.id = uid();
         mc = null; cloud.savedStamp = null; stage = 'project'; touch(); pv.view = null; pv.sel = null; pv.open.clear();
         recompute(); renderStage(); updateChrome(); renderOverlay({ status: `Imported “${state.meta.name}”.` });
@@ -5105,6 +5110,166 @@ if (typeof module !== 'undefined') module.exports = Plant;
     offerFile(slug(state.meta.name) + '-uncertainty.xlsx', new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   }
 
+  /* ---------- suite project (optional): WattOdds in the project bar, shared with the other tools ----------
+     Reads the lossstack and windnudge/solarnudge sections, writes its own wattodds section.
+     Upstream changes are offered with Apply, never applied silently. Without a suite project nothing here runs. */
+  const SUITE_NUDGE = { wind: 'windnudge', solar: 'solarnudge' };
+  const SUITE_NUDGE_LABEL = { windnudge: 'WindNudge', solarnudge: 'SolarNudge' };
+  let suiteProj = null;   // the suite project this page is editing, or null
+  let suiteApplied = {};  // upstream section revisions this project was built from
+  let suiteRev = null;    // wattodds section revision last written by this page
+  let suiteTimer = 0, suiteHold = false;
+
+  function suiteClear() { clearTimeout(suiteTimer); suiteTimer = 0; suiteProj = null; suiteApplied = {}; suiteRev = null; }
+  // Leave the suite project; the working state stays as it is. With toHub, the bar shows no project too.
+  function suiteDetach(toHub) {
+    const was = suiteProj;
+    suiteClear();
+    if (was && toHub && window.CRSuite) CRSuite.open(null).catch(() => {});
+  }
+  function suiteSchedule() {
+    if (!suiteProj || suiteHold) return;
+    clearTimeout(suiteTimer);
+    suiteTimer = setTimeout(suiteFlush, 800);
+  }
+  function suiteFlush() {
+    suiteTimer = 0;
+    if (!suiteProj || suiteHold || !window.CRSuite) return;
+    const id = suiteProj.id;
+    const f = !isHybrid() && result && result.H ? result.H[1] : null;
+    const summary = f ? { p50GWh: f.p50, p90GWh: f.pv.P90, sigmaPct: f.sigma, horizon: 1 } : null;
+    CRSuite.write('wattodds', { project: clone(state), summary, appliedFrom: suiteApplied }).then(
+      res => { if (suiteProj && suiteProj.id === id) suiteRev = res.sectionRev; },
+      () => CRSuite.notice('This change could not be saved to the project.'));
+  }
+  // lossstack: the WattOdds project LossStack built. Only loss and storage items come across, plus energy and plant.
+  function applyLossStack(section) {
+    const p = section.value && section.value.wattoddsProject;
+    if (!p || typeof p !== 'object') return;
+    Object.keys(p.items || {}).forEach(id => {
+      const d = Lb.ITEM_BY_ID[id];
+      if (!d || (d.domain !== 'loss' && d.domain !== 'bess')) return;
+      state.items[id] = Object.assign({}, state.items[id], p.items[id]);
+    });
+    if (p.energy && typeof p.energy === 'object') Object.assign(state.energy, p.energy);
+    if (p.pv && typeof p.pv === 'object') state.pv = Object.assign(state.pv || {}, p.pv);
+    if (p.plant && p.plant.nTurbines) {
+      state.plant.nTurbines = p.plant.nTurbines;
+      if (p.plant.ratedMW) state.plant.ratedMW = p.plant.ratedMW;
+    }
+    suiteApplied.lossstack = section.rev;
+  }
+  // windnudge / solarnudge: the sensitivity, wind climate, rating, air density and shear that the Nudge measured.
+  function applyNudge(section, tool) {
+    const x = section.value && section.value.export;
+    if (!x || typeof x !== 'object') return;
+    const num = v => (typeof v === 'number' && isFinite(v) ? v : null);
+    const set = (obj, key, v) => { if (v !== null) obj[key] = v; };
+    if (tool === 'windnudge') {
+      const site = x.site || {}, tur = x.turbine || {}, base = x.base || {};
+      const sens = num(x.speed_to_aep_ratio);
+      if (sens !== null && sens > 0) { state.energy.sensMode = 'entered'; state.energy.sens = sens; }
+      set(state.climate, 'meanWs', num(base.hub_speed_ms));
+      set(state.plant, 'hubH', num(site.hub_height_m));
+      const rated = num(tur.rated_kw);
+      if (rated !== null && rated > 0) state.plant.ratedMW = rated / 1000;
+      set(state.plant, 'rotorD', num(tur.rotor_diameter_m));
+      const rho = num(site.air_density_kgm3);
+      if (rho !== null && rho > 0) { state.site.rhoMode = 'entered'; state.site.rho = rho; }
+      set(state.vertical, 'hMeas', num(site.measurement_height_m));
+      set(state.vertical, 'alpha', num(site.shear_alpha));
+    } else if (tool === 'solarnudge') {
+      const r = num(x.irradiance_to_energy_ratio);
+      if (r !== null && r > 0) { state.energy.sensMode = 'entered'; state.energy.sens = r; }
+    }
+    suiteApplied[tool] = section.rev;
+  }
+  function reopenSuite() {
+    mc = null; stage = 'project'; saveLocal(); pv.view = null; pv.sel = null; pv.open.clear();
+    recompute(); renderStage(); updateChrome();
+  }
+  // Start working on a suite project. Its own wattodds section wins; otherwise build one from the upstream sections.
+  function suiteAdopt(p) {
+    suiteClear();
+    suiteProj = p;
+    const ws = p.sections && p.sections.wattodds;
+    const own = !!(ws && ws.value && ws.value.project);
+    if (own) {
+      state = Lb.normalise(ws.value.project);
+      suiteApplied = Object.assign({}, ws.value.appliedFrom || {});
+      suiteRev = ws.rev;
+    } else {
+      state = Lb.blankProject(p.tech);
+      const ls = p.sections && p.sections.lossstack;
+      if (ls) applyLossStack(ls);
+      const nk = SUITE_NUDGE[p.tech], nu = nk && p.sections && p.sections[nk];
+      if (nu) applyNudge(nu, nk);
+    }
+    state.meta.id = p.id; state.meta.name = p.name;
+    if (!own) suiteSchedule();
+    reopenSuite();
+    if (own) suiteNotices(p);
+  }
+  function suiteNotices(p) {
+    if (!suiteProj || suiteProj.id !== p.id) return;
+    const ls = p.sections && p.sections.lossstack;
+    if (ls && ls.rev > (suiteApplied.lossstack || 0)) suiteOffer('lossstack', 'LossStack has new losses for this project.');
+    const nk = SUITE_NUDGE[p.tech], nu = nk && p.sections && p.sections[nk];
+    if (nu && nu.rev > (suiteApplied[nk] || 0)) suiteOffer(nk, SUITE_NUDGE_LABEL[nk] + ' has new results for this project.');
+  }
+  function suiteOffer(name, text) {
+    CRSuite.notice(text, { action: 'Apply', onAction: () => suiteApply(name) });
+  }
+  function suiteApply(name) {
+    const id = suiteProj && suiteProj.id;
+    if (!id) return;
+    CRSuite.current().then(p => {
+      if (!p || p.id !== id || !suiteProj) return;
+      const sec = p.sections && p.sections[name];
+      if (!sec) return;
+      if (name === 'lossstack') applyLossStack(sec); else applyNudge(sec, name);
+      suiteProj = p;
+      touch(); recompute(); renderStage(); updateChrome();
+    }).catch(() => CRSuite.notice('Could not read the project. Try again.'));
+  }
+  function onSuiteChange(e) {
+    if (suiteHold) return;
+    const p = e.project;
+    if (!p) { if (suiteProj) suiteClear(); return; }
+    if (!suiteProj || p.id !== suiteProj.id) { suiteAdopt(p); return; }
+    suiteProj = p;
+    if (p.name && state.meta.name !== p.name) { state.meta.name = p.name; saveLocal(); updateChrome(); }
+    if (!e.own) suiteNotices(p);
+  }
+  function suiteAddHtml() {
+    if (!window.CRSuite) return '';
+    if (suiteProj) return `<span class="side-note">In the project bar as “${esc(suiteProj.name)}”.</span>`;
+    return '<button class="btn" data-act="addsuite">Add to suite</button>';
+  }
+  // Add the project in front of the user to the suite. Its current state is kept, not replaced by a blank one.
+  function suiteAddCurrent() {
+    if (!window.CRSuite || suiteProj) return;
+    suiteHold = true;
+    CRSuite.create({ name: state.meta.name || 'Untitled project', tech: ptech() }).then(p => {
+      suiteHold = false;
+      suiteProj = p; suiteApplied = {}; suiteRev = null;
+      state.meta.id = p.id; state.meta.name = p.name;
+      touch(); updateChrome();
+      if (overlay) renderOverlay({ status: `Added “${p.name}” to the suite.` });
+    }).catch(() => {
+      suiteHold = false;
+      if (overlay) renderOverlay({ status: 'Could not add the project to the suite. Check that browser storage is not blocked.' });
+    });
+  }
+  function startSuite() {
+    if (!window.CRSuite) return;
+    try {
+      CRSuite.mountBar({ tool: 'wattodds', after: document.querySelector('header.top') });
+      CRSuite.onChange(onSuiteChange);
+      CRSuite.ready.then(() => CRSuite.current()).then(p => { if (p) suiteAdopt(p); }).catch(() => {});
+    } catch (e) { /* WattOdds works without the suite */ }
+  }
+
   /* ---------- boot ---------- */
   function start() {
     const saved = loadLocal();
@@ -5122,6 +5287,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     initCaps();
   }
   start();
+  if (document.readyState === 'complete') startSuite(); else window.addEventListener('load', startSuite);
 })();
 
 </script>
