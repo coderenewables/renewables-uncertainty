@@ -44,8 +44,9 @@
   --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --r: 10px;
   --rail-w: 236px;
-  --side-w: 300px;
+  --side-w: 372px;
   --top-h: 56px;
+  --good-ink: #0d7a52; --good-wash: #dff5ec; --bad-wash: #fde8e8; --store: #7a5cc6; --sun: #c98a00;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -54,6 +55,7 @@
     --ev-calc: #9ec5f4; --ev-site: #5598e7; --ev-desc: #2a78d6; --ev-generic: #184f95; --ev-none: #3a4a50;
     --series: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --warn-ink: #f2c45c; --warn-wash: #2c2410; --crit: #e66767;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 24px rgba(0, 0, 0, 0.25);
+    --good-ink: #5ed6a6; --good-wash: #10362a; --bad-wash: #3a1818; --store: #a590e6; --sun: #e6b23a;
     color-scheme: dark;
   }
 }
@@ -63,6 +65,7 @@
   --ev-calc: #9ec5f4; --ev-site: #5598e7; --ev-desc: #2a78d6; --ev-generic: #184f95; --ev-none: #3a4a50;
   --series: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --warn-ink: #f2c45c; --warn-wash: #2c2410; --crit: #e66767;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 24px rgba(0, 0, 0, 0.25);
+  --good-ink: #5ed6a6; --good-wash: #10362a; --bad-wash: #3a1818; --store: #a590e6; --sun: #e6b23a;
   color-scheme: dark;
 }
 
@@ -111,7 +114,7 @@ a { color: var(--accent-ink); }
 .frame { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr) var(--side-w); gap: 0; align-items: start; }
 .rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--top-h)); max-height: calc(100vh - var(--top-h)); overflow-y: auto; padding: 20px 0 32px max(16px, env(safe-area-inset-left, 0px)); }
 .sheet { min-width: 0; padding: 24px 28px 120px; }
-.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--top-h)); max-height: calc(100vh - var(--top-h)); overflow-y: auto; padding: 20px max(16px, env(safe-area-inset-right, 0px)) 32px 0; }
+.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--top-h)); max-height: calc(100vh - var(--top-h)); overflow-y: auto; overscroll-behavior: contain; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 28px 0; scrollbar-width: thin; }
 
 /* ---------- chain rail ---------- */
 .chain { list-style: none; margin: 0; padding: 0; position: relative; }
@@ -296,8 +299,9 @@ table.t tr.hl td { background: var(--accent-wash); }
 .bottombar { display: none; }
 
 /* ---------- responsive ---------- */
-@media (max-width: 1180px) {
+@media (max-width: 1239px) {
   .frame { grid-template-columns: var(--rail-w) minmax(0, 1fr); }
+  body.pv-on .frame { display: block; }
   .side { display: none; }
   .sheet { padding-right: max(28px, env(safe-area-inset-right, 0px)); }
   .bottombar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--surface); border-top: 1px solid var(--line); box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
@@ -353,8 +357,8 @@ table.t tr.hl td { background: var(--accent-wash); }
    The drawing is the navigation: badges sit in two rows above and below the scene with leader
    lines to each part; the selected part's categories pop out as bubbles. The inspector holds
    the inputs (a sticky column on wide screens, a bottom sheet on narrow ones). */
-body.pv-on .rail, body.pv-on .side, body.pv-on .bottombar { display: none !important; }
-body.pv-on .frame { display: block; }
+body.pv-on .rail { display: none !important; }
+body.pv-on .frame { grid-template-columns: minmax(0, 1fr) var(--side-w); }
 body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48px max(20px, env(safe-area-inset-left, 0px)); }
 .vt { display: flex; background: var(--sunk); border-radius: 8px; padding: 3px; gap: 2px; }
 .vt button { border: 0; background: transparent; display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
@@ -374,7 +378,8 @@ body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48p
 .pv-tot .bb-fig .v.ratio { color: var(--accent-ink); }
 .pv-hz { width: 270px; }
 
-.pv-body { display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 16px; align-items: start; }
+.pv-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+.pv.has-insp .pv-body { grid-template-columns: minmax(0, 1fr) 390px; }
 .pv-stage { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px 12px; }
 .pv-insp { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--top-h) + 12px); max-height: calc(100vh - var(--top-h) - 24px); overflow-y: auto; overscroll-behavior: contain; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-width: 0; }
 .insp-in { padding: 16px; display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
@@ -511,11 +516,11 @@ body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48p
 .pv-insp .stack h4 { margin-top: 4px; }
 
 @media (max-width: 1199px) {
-  .pv-body { grid-template-columns: minmax(0, 1fr) 360px; }
+  .pv.has-insp .pv-body { grid-template-columns: minmax(0, 1fr) 360px; }
   .pv-hz { width: 240px; }
 }
 @media (max-width: 899px) {
-  .pv-body { grid-template-columns: minmax(0, 1fr); }
+  .pv.has-insp .pv-body { grid-template-columns: minmax(0, 1fr); }
   .pv-insp { position: static; max-height: none; overflow: visible; }
   .pv-tot { justify-content: flex-start; }
   .pv-hz { width: 100%; }
@@ -533,6 +538,162 @@ body.pv-on .sheet { padding: 16px max(20px, env(safe-area-inset-right, 0px)) 48p
   .pv-bar { padding: 10px 12px; }
   .pv-stage { padding: 10px; }
   .pv-lrow { grid-template-columns: minmax(0, 1fr) auto 44px 34px; gap: 8px; }
+}
+
+/* ---------- results rail ----------
+   Always on screen: pinned to the right on wide screens, a sheet over the page on narrow ones.
+   Bars and markers move to their new place and changed numbers are tagged, so the effect of
+   an input is visible where it lands. */
+.rr { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+.rr .grow { flex: 1; }
+.rr-top { display: flex; align-items: baseline; gap: 8px; }
+.rr-top h3 { font-size: 1.08rem; }
+.rr-meta { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-3); white-space: nowrap; }
+.rr-close { display: none; }
+.rr .hz button { padding: 5px 4px; }
+.rr-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.kpi { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 9px 12px 8px; display: grid; gap: 1px; min-width: 0; }
+.kpi.key { border-color: var(--accent); box-shadow: inset 0 3px 0 var(--accent); }
+.kpi .l { font-size: 0.74rem; color: var(--ink-2); font-weight: 600; }
+.kpi .v { font-family: var(--f-display); font-stretch: 105%; font-weight: 800; font-size: 1.62rem; line-height: 1.08; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kpi .v small { font-size: 0.7rem; font-weight: 600; color: var(--ink-2); margin-left: 3px; letter-spacing: 0; }
+.kpi .s { font-family: var(--f-mono); font-size: 0.68rem; color: var(--ink-3); min-height: 1.2em; }
+.rr-chg { display: none; }
+.kpi .rr-chg, .rr-meet .rr-chg { display: inline-block; position: absolute; top: 7px; right: 8px; font-family: var(--f-mono); font-size: 0.66rem; font-weight: 600; padding: 1px 6px; border-radius: 999px; pointer-events: none; opacity: 0; animation: rrchg 2.6s ease-out both; }
+.rr-chg.good, .rr-d.good { background: var(--good-wash); color: var(--good-ink); }
+.rr-chg.bad, .rr-d.bad { background: var(--bad-wash); color: var(--crit); }
+@keyframes rrchg { 0% { opacity: 0; transform: translateY(4px); } 6% { opacity: 1; transform: none; } 78% { opacity: 1; } 100% { opacity: 0; } }
+.rr-d { display: inline-block; text-indent: 0; font-family: var(--f-mono); font-size: 0.66rem; font-weight: 600; padding: 0 5px; border-radius: 999px; margin-left: 4px; white-space: nowrap; vertical-align: 1px; }
+.rr-d.same { background: var(--sunk); color: var(--ink-3); }
+.rr-base { display: flex; align-items: center; gap: 4px; font-size: 0.74rem; line-height: 1.3; color: var(--ink-2); background: var(--sunk); border-radius: 8px; padding: 6px 8px 6px 10px; }
+.rr-base.on { background: var(--accent-wash); color: var(--accent-ink); font-weight: 600; }
+.rr-sec { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 11px 12px 12px; display: grid; gap: 8px; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+.rr-sec > header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; min-height: 22px; }
+.rr-sec h4 { font-size: 0.74rem; }
+.rr-sec h5 { margin: 4px 0 0; font-size: 0.72rem; font-weight: 700; color: var(--ink-2); }
+.rr-foot { font-size: 0.7rem; line-height: 1.4; color: var(--ink-3); }
+.rr-foot b { color: var(--ink-2); font-family: var(--f-mono); font-weight: 600; }
+.rr-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.rr-acts.end .btn { flex: 1; justify-content: center; }
+.rr-ev { display: grid; gap: 6px; padding-top: 4px; border-top: 1px solid var(--line); }
+.rr-ev .legend { font-size: 0.68rem; gap: 2px 10px; }
+
+.rr-curve { width: 100%; height: auto; display: block; overflow: visible; }
+.rr-curve .ln { fill: none; stroke: var(--series); stroke-width: 2; stroke-linejoin: round; }
+.rr-curve .body { fill: var(--series); fill-opacity: 0.12; }
+.rr-curve .tail { fill: var(--accent); fill-opacity: 0.3; }
+.rr-curve .ghost { fill: none; stroke: var(--ink-3); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.rr-curve .ax { stroke: var(--line-2); }
+.rr-curve .mk { transition: transform 0.35s ease; }
+.rr-curve .mk line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 2; }
+.rr-curve .mk text { font-family: var(--f-mono); font-size: 10px; fill: var(--ink-2); }
+.rr-curve .mk.p90 line { stroke: var(--accent); stroke-width: 1.6; stroke-dasharray: none; }
+.rr-curve .mk.p90 text { fill: var(--accent-ink); font-weight: 700; }
+.rr-curve .mk.p50 line { stroke: var(--ink); stroke-dasharray: none; }
+.rr-curve .mk.p50 text { fill: var(--ink); font-weight: 700; }
+.rr-curve .tk { font-family: var(--f-mono); font-size: 9.5px; fill: var(--ink-3); }
+.rr-curve .tailt { fill: var(--accent-ink); }
+.rr-curve .cur { stroke: var(--ink); stroke-width: 1; pointer-events: none; opacity: 0; }
+.rr-curve .cur.on { opacity: 1; }
+.rr-curve .hit { fill: transparent; cursor: crosshair; }
+.rr-lv { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; }
+.rr-lv > div { display: grid; justify-items: center; padding: 5px 2px 4px; border-radius: 7px; background: var(--sunk); min-width: 0; }
+.rr-lv > div.key { background: var(--accent-wash); }
+.rr-lv .l { font-size: 0.66rem; font-weight: 700; color: var(--ink-2); }
+.rr-lv .key .l { color: var(--accent-ink); }
+.rr-lv .v { font-family: var(--f-mono); font-weight: 600; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.rr-lv .s { font-family: var(--f-mono); font-size: 0.62rem; color: var(--ink-3); white-space: nowrap; }
+
+.rr-bridge { display: grid; gap: 0; }
+.br-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr) 62px; gap: 8px; align-items: center; width: 100%; padding: 4px 4px; border: 0; background: transparent; border-radius: 6px; text-align: left; font-size: 0.79rem; line-height: 1.2; color: var(--ink); }
+button.br-row { cursor: pointer; }
+button.br-row:hover { background: var(--sunk); }
+.br-row .bn { min-width: 0; overflow-wrap: anywhere; }
+.br-row.grp .bn { padding-left: 11px; text-indent: -11px; }
+.br-row .bn small { display: block; font-family: var(--f-mono); font-size: 0.64rem; font-weight: 400; color: var(--ink-3); }
+.br-row.grp .bn::before { content: ""; display: inline-block; width: 0; height: 0; border-left: 5px solid var(--ink-3); border-top: 4px solid transparent; border-bottom: 4px solid transparent; margin-right: 6px; transition: transform 0.15s; }
+.br-g.open .br-row.grp .bn::before { transform: rotate(90deg); }
+.br-row .bt { position: relative; height: 14px; background: linear-gradient(var(--line), var(--line)) center / 100% 1px no-repeat; }
+.br-row .bt i { position: absolute; top: 1px; bottom: 1px; border-radius: 3px; transition: left 0.35s ease, width 0.35s ease; }
+.br-row .bt i.tot { background: var(--series); }
+.br-row .bt i.tot.net { background: var(--ev-calc); }
+.br-row .bt i.tot.wind { background: var(--c1); }
+.br-row .bt i.tot.solar { background: var(--sun); }
+.br-row .bt i.loss { background: var(--accent); }
+.br-row .bt i.gain { background: var(--good-ink); }
+.br-row .bt i.store { background: var(--store); }
+.br-row .bv { font-family: var(--f-mono); font-size: 0.76rem; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.br-row .bv small { display: block; font-size: 0.63rem; color: var(--ink-3); }
+.br-row .bv.tot { font-weight: 700; font-size: 0.86rem; }
+.br-row.end { font-weight: 700; }
+.br-row.it { padding: 2px 4px 2px 15px; font-size: 0.73rem; color: var(--ink-2); }
+.br-row.it .bt { height: 10px; }
+.br-row.it .bt i { opacity: 0.75; }
+.br-row.it.off { opacity: 0.55; }
+.br-g.open { background: color-mix(in srgb, var(--sunk) 55%, transparent); border-radius: 8px; padding-bottom: 3px; margin: 1px 0; }
+.br-head { display: flex; justify-content: space-between; gap: 8px; margin: 7px 0 2px; padding: 3px 6px; border-radius: 5px; background: var(--sunk); font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; color: var(--ink-2); }
+.br-head span:last-child { font-family: var(--f-mono); font-weight: 500; }
+.br-head.wind { box-shadow: inset 3px 0 0 var(--c1); }
+.br-head.solar { box-shadow: inset 3px 0 0 var(--sun); }
+.br-head.hybrid { box-shadow: inset 3px 0 0 var(--ink-3); }
+.br-row .ct { display: inline-block; text-indent: 0; font-family: var(--f-mono); font-size: 0.6rem; font-weight: 700; padding: 0 4px; border-radius: 4px; margin-right: 5px; background: var(--sunk); vertical-align: 1px; }
+.br-row .ct.wind { color: var(--c1); }
+.br-row .ct.solar { color: var(--sun); }
+
+.rr-drv { display: grid; gap: 1px; }
+.dv-row { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) 34px; gap: 8px; align-items: center; width: 100%; border: 0; background: transparent; border-radius: 6px; padding: 5px 4px; text-align: left; cursor: pointer; font-size: 0.79rem; line-height: 1.2; color: var(--ink); }
+.dv-row:hover { background: var(--sunk); }
+.dv-row .dn { min-width: 0; overflow-wrap: anywhere; }
+.dv-row .dn small { display: block; font-size: 0.66rem; color: var(--ink-3); margin-top: 1px; }
+.dv-row .db, .rr-dfr .db { height: 8px; background: var(--sunk); border-radius: 4px; overflow: hidden; }
+.dv-row .db i, .rr-dfr .db i { display: block; height: 100%; border-radius: 4px; transition: width 0.35s ease; }
+.rr-dfr .db i { background: var(--store); }
+.dv-row .dp { font-family: var(--f-mono); font-size: 0.76rem; text-align: right; color: var(--ink-2); }
+
+.rr-checks { display: grid; gap: 6px; }
+.rr-checks .ck { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: start; width: 100%; text-align: left; border: 0; border-radius: 8px; padding: 8px 10px; font-size: 0.77rem; line-height: 1.35; cursor: pointer; background: var(--sunk); color: var(--ink-2); }
+.rr-checks .ck.warn { background: var(--warn-wash); color: var(--warn-ink); }
+.rr-checks .ck:hover { filter: brightness(0.97); }
+.rr-checks .ci { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-family: var(--f-mono); font-size: 0.66rem; font-weight: 700; margin-top: 1px; }
+
+.rr-dfr { display: grid; gap: 4px; }
+.rr-dfr .dfr { display: grid; grid-template-columns: 72px minmax(0, 1fr) 42px; gap: 8px; align-items: center; font-size: 0.74rem; color: var(--ink-2); }
+.rr-dfr .dfr b { font-family: var(--f-mono); font-weight: 600; text-align: right; color: var(--ink); }
+.rr-meet { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: center; background: var(--sunk); border-radius: 8px; padding: 8px 10px; transition: opacity 0.2s; }
+.rr-meet.stale { opacity: 0.6; }
+.rr-meet .mv { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.rr-meet .ml { font-size: 0.76rem; line-height: 1.3; }
+.rr-meet .ml small { display: block; font-family: var(--f-mono); font-size: 0.66rem; color: var(--ink-3); }
+.pv-stat.stale { opacity: 0.6; }
+
+.item.flash { animation: itflash 1.8s ease-out; }
+@keyframes itflash { 0%, 35% { box-shadow: 0 0 0 3px var(--accent-wash), 0 0 0 4px var(--accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.pv-ex { margin: 0; }
+.pv-hint { flex-basis: 100%; font-weight: 600; color: var(--ink-2); font-size: 0.8rem; }
+.pv-chip.set { border-style: solid; }
+.t.loss tr.grp td { font-weight: 700; background: var(--sunk); }
+.t.loss td.sub { padding-left: 22px; }
+.t.loss tr.off { opacity: 0.5; }
+
+/* the rail is on screen: its numbers replace the ones in the bar above the drawing */
+@media (min-width: 1240px) {
+  body.pv-on .pv-tot, body.pv-on .pv-hz { display: none; }
+  body.pv-on .sheet { padding-right: 16px; }
+}
+@media (min-width: 1240px) and (max-width: 1439px) {
+  :root { --side-w: 328px; }
+  .pv.has-insp .pv-body { grid-template-columns: minmax(0, 1fr) 348px; }
+  .kpi .v { font-size: 1.42rem; }
+}
+/* narrow screens: the rail becomes a sheet opened from the bar at the bottom */
+@media (max-width: 1239px) {
+  body.pv-on .bottombar { display: flex; }
+  body.pv-on .sheet { padding-bottom: 96px; }
+  body.rr-open .side { display: block; position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 45; max-height: min(86vh, 100vh - var(--top-h)); overflow-y: auto; background: var(--paper); border-radius: 16px 16px 0 0; border-top: 1px solid var(--line-2); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.22);
+    padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+  body.rr-open .rr { max-width: 560px; margin: 0 auto; }
+  body.rr-open .rr-close { display: inline-flex; }
+  body.rr-open .bottombar { display: none; }
 }
 
 </style>
@@ -802,15 +963,19 @@ const Engine = (() => {
     let eff = 1;
     model.items.filter(i => i.domain === 'loss' && i.time !== 'horizon').forEach(i => { eff *= (1 - i.L / 100); });
     const entered = pe.p50Mode === 'entered' && num(pe.p50, 0) > 0;
+    // 'gross': the gross energy comes from the user's own model (wake model, PV simulation); the losses set here take it to net
+    const grossIn = pe.p50Mode === 'gross' && num(pe.gross, 0) > 0;
+    const source = entered ? 'entered' : grossIn ? 'gross' : 'computed';
     const sEntered = pe.sensMode === 'entered' && num(pe.sens, 0) > 0;
     if (model.tech === 'solar') {
       const refYield = ctx.ghi * ctx.poaRatio;                 // kWh/m² on the array ≈ reference yield, kWh/kWp
-      const grossGWh = ctx.dc * refYield / 1000;              // MWp × kWh/kWp → GWh
-      const netComputed = grossGWh * eff;
-      const p50 = entered ? num(pe.p50, 0) : netComputed;
+      const grossTool = ctx.dc * refYield / 1000;             // MWp × kWh/kWp → GWh
+      const grossGWh = grossIn ? num(pe.gross, 0) : grossTool;
+      const netComputed = grossTool * eff;
+      const p50 = entered ? num(pe.p50, 0) : grossGWh * eff;
       const S = sEntered ? num(pe.sens, 0) : 1.0;
       return {
-        tech: 'solar', grossGWh, netComputed, eff, p50, p50Source: entered ? 'entered' : 'computed',
+        tech: 'solar', grossGWh, grossTool, netComputed, eff, p50, p50Source: source,
         cf: p50 * 1000 / (ctx.ac * 8760), grossCf: grossGWh * 1000 / (ctx.ac * 8760),
         refYield, specYield: p50 * 1000 / ctx.dc, pr: eff,
         S, sCalc: 1.0, sSource: sEntered ? 'entered' : 'computed', table: null, linearTable: true,
@@ -818,9 +983,10 @@ const Engine = (() => {
     }
     const curve = ctx.curve.fn;
     const p1 = meanPower(curve, ctx.meanWs, ctx.k, 1);
-    const grossGWh = p1 * 8760 * ctx.nTurbines / 1000;
-    const netComputed = grossGWh * eff;
-    const p50 = entered ? num(pe.p50, 0) : netComputed;
+    const grossTool = p1 * 8760 * ctx.nTurbines / 1000;
+    const grossGWh = grossIn ? num(pe.gross, 0) : grossTool;
+    const netComputed = grossTool * eff;
+    const p50 = entered ? num(pe.p50, 0) : grossGWh * eff;
     const d = 0.01;
     const up = meanPower(curve, ctx.meanWs, ctx.k, 1 + d), dn = meanPower(curve, ctx.meanWs, ctx.k, 1 - d);
     const sCalc = p1 > 0 ? (up - dn) / (2 * d * p1) : 1.8;
@@ -828,7 +994,7 @@ const Engine = (() => {
     const table = [];
     for (let w = 0.5; w <= 1.5001; w += 0.02) table.push([w, p1 > 0 ? meanPower(curve, ctx.meanWs, ctx.k, w) / p1 : w]);
     return {
-      tech: 'wind', grossGWh, netComputed, eff, p50, p50Source: entered ? 'entered' : 'computed',
+      tech: 'wind', grossGWh, grossTool, netComputed, eff, p50, p50Source: source,
       cf: ctx.capacityMW > 0 ? p50 * 1000 / (ctx.capacityMW * 8760) : 0,
       grossCf: ctx.capacityMW > 0 ? grossGWh * 1000 / (ctx.capacityMW * 8760) : 0,
       S, sCalc, sSource: sEntered ? 'entered' : 'computed', table, linearTable: sEntered,
@@ -1189,7 +1355,7 @@ const Engine = (() => {
     const p50y1 = H[1].p50;
     const en = {
       tech: 'hybrid', p50: p50y1, eff: effSh, netComputed: (rw.en.netComputed + rs.en.netComputed) * effSh,
-      p50Source: rw.en.p50Source === 'entered' || rs.en.p50Source === 'entered' ? 'entered' : 'computed',
+      p50Source: rw.en.p50Source === 'entered' || rs.en.p50Source === 'entered' ? 'entered' : rw.en.p50Source === 'gross' || rs.en.p50Source === 'gross' ? 'gross' : 'computed',
       cf: p50y1 * 1000 / (gridMW * 8760), cfInstalled: p50y1 * 1000 / ((windMW + solarAC) * 8760),
       windShare: H[1].comb.aw, solarShare: H[1].comb.as, S: null,
     };
@@ -1201,7 +1367,123 @@ const Engine = (() => {
     };
   }
 
-  return { Z, PLEVELS, gamma, cholesky, rng, weibullFromMoments, airDensity, genericCurve, parseCurve, customCurve, curveFor, meanPower, buildContext, evalItem, buildModel, energy, combine, pvalues, contributions, evaluate, evaluateHybrid, monteCarlo, techSampler, itemSampler, climateSigma, lossAt, p50Factor, techOf, forTech, hybridStageOf, exportLimitLoss, isRes, TIER_OF_MODE, IEC_BASIS, num, clamp };
+  /* ---------- gross to net: the loss bridge ---------- */
+  /* Groups in the order the energy meets them on the way from the resource to the meter. */
+  const BRIDGE_ORDER = {
+    wind: [['turbine_interaction', 'Wakes and blockage'], ['turbine_performance', 'Turbine performance'], ['environmental', 'Environmental'],
+      ['electrical', 'Electrical'], ['availability', 'Availability'], ['curtailment', 'Curtailment']],
+    solar: [['plane_of_array', 'Plane of array'], ['shading_optical', 'Shading and optics'], ['thermal', 'Temperature'], ['module', 'Modules'],
+      ['dc_inverter', 'DC side and inverter'], ['electrical', 'Electrical'], ['availability', 'Availability'], ['curtailment', 'Curtailment'], ['degradation', 'Degradation']],
+    shared: [['electrical', 'Export line'], ['availability', 'Grid availability'], ['curtailment', 'Curtailment at the connection']],
+  };
+  const prettyCat = c => String(c || 'other').replace(/_/g, ' ').replace(/^./, m => m.toUpperCase());
+  function orderLoss(items, kind) {
+    const ord = BRIDGE_ORDER[kind] || [];
+    const idx = c => { const i = ord.findIndex(o => o[0] === c); return i < 0 ? ord.length : i; };
+    const name = c => { const o = ord.find(x => x[0] === c); return o ? o[1] : prettyCat(c); };
+    return items.filter(i => i.domain === 'loss').map((it, n) => ({ it, n, gi: idx(it.cat), gname: name(it.cat) }))
+      .sort((a, b) => a.gi - b.gi || a.n - b.n);
+  }
+  /* The gross energy the bridge starts from. When the P50 was entered from a report, the gross is the
+     one the losses imply (P50 ÷ efficiency), so the bridge always lands on the P50 in use. */
+  function grossOf(en) {
+    if (en.p50Source === 'entered') return { gross: en.eff > 0 ? en.p50 / en.eff : en.p50, implied: true };
+    return { gross: en.grossGWh, implied: false };
+  }
+  /* One plant's losses applied to its own stream. Returns the steps and the energy left. */
+  function streamSteps(model, kind, comp, start, N) {
+    let e = start, v = 0;
+    const steps = orderLoss(model.items, kind).map(({ it, gname }) => {
+      const la = lossAt(it, N), before = e, lost = before * la.L / 100;
+      e = before - lost;
+      const eta = Math.max(0.05, 1 - la.L / 100);
+      const vr = (la.s / eta) ** 2 + (it.time === 'horizon' ? 0 : (it.iav / eta) ** 2 / N);
+      v += vr;
+      return { key: it.key, id: it.id, name: it.name, comp, cat: it.cat, group: (comp ? comp + ':' : '') + it.cat, groupName: gname, L: la.L, s: la.s, iav: it.time === 'horizon' ? 0 : it.iav,
+        rate: it.time === 'horizon' ? it.L : null, mode: it.mode, tier: it.tier, excluded: it.mode === 'none', lost, streamBefore: before, streamAfter: e, variance: vr };
+    });
+    return { steps, end: e, variance: v };
+  }
+  /* Gross to net at an N-year average for a whole project (wind, solar or hybrid). Energy in GWh/yr.
+     steps[].before/after run from the total gross down to the net; a hybrid has two gross streams
+     (wind, solar) and the shared connection losses act on their sum. */
+  function lossBridge(r, N) {
+    N = N || r.focusN;
+    let steps = [], sources, net, implied = false, lossVar = 0;
+    if (r.hybrid) {
+      const gw = grossOf(r.wind.en), gs = grossOf(r.solar.en);
+      implied = gw.implied || gs.implied;
+      const w = streamSteps(r.wind.model, 'wind', 'wind', gw.gross, N), so = streamSteps(r.solar.model, 'solar', 'solar', gs.gross, N);
+      const sh = streamSteps({ items: r.hyb.shared }, 'shared', 'hybrid', w.end + so.end, N);
+      sources = [{ comp: 'wind', name: 'Wind gross', gross: gw.gross }, { comp: 'solar', name: 'Solar gross', gross: gs.gross }];
+      steps = [...w.steps, ...so.steps, ...sh.steps];
+      net = sh.end;
+      const T = Math.max(1e-9, w.end + so.end), aw = w.end / T, as = so.end / T;
+      lossVar = aw * aw * w.variance + as * as * so.variance + sh.variance;
+    } else {
+      const g = grossOf(r.en); implied = g.implied;
+      const kind = r.tech === 'solar' ? 'solar' : 'wind';
+      const st = streamSteps(r.model, kind, null, g.gross, N);
+      sources = [{ comp: null, name: 'Gross energy', gross: g.gross }];
+      steps = st.steps; net = st.end; lossVar = st.variance;
+    }
+    const gross = sources.reduce((a, s) => a + s.gross, 0);
+    let run = gross;
+    steps.forEach(s => { s.before = run; run -= s.lost; s.after = run; });
+    const groups = [];
+    steps.forEach(s => {
+      let g = groups[groups.length - 1];
+      if (!g || g.id !== s.group) { g = { id: s.group, comp: s.comp, cat: s.cat, name: s.groupName, before: s.before, streamBefore: s.streamBefore, lost: 0, steps: [], variance: 0 }; groups.push(g); }
+      g.steps.push(s); g.lost += s.lost; g.after = s.after; g.streamAfter = s.streamAfter; g.variance += s.variance;
+    });
+    groups.forEach(g => { g.L = g.streamBefore > 0 ? (1 - g.streamAfter / g.streamBefore) * 100 : 0; });
+    return { N, gross, sources, net, implied, steps, groups, lossPct: gross > 0 ? (1 - net / gross) * 100 : 0, lossSigma: Math.sqrt(Math.max(0, lossVar)) };
+  }
+
+  /* ---------- plausibility checks on the inputs ---------- */
+  /* Each check: { level: 'warn' | 'note', id, text, part } — part is the plant part to open. */
+  function sanity(project, r) {
+    const out = [];
+    const add = (level, id, text, part) => out.push({ level, id, text, part: part || null });
+    const windChecks = (rr, pre) => {
+      const en = rr.en, ctx = rr.model.ctx;
+      if (en.grossCf > 0.65) add('warn', pre + 'grosscf', `Gross capacity factor is ${(en.grossCf * 100).toFixed(0)} %. Few sites exceed 60 %: check the gross energy, the turbine count and the rated power.`, 'w.turbines');
+      else if (en.grossCf > 0 && en.grossCf < 0.15) add('warn', pre + 'grosscf', `Gross capacity factor is only ${(en.grossCf * 100).toFixed(0)} %. Check the mean wind speed, the gross energy and the rated power.`, 'w.turbines');
+      if (en.p50Source === 'entered' && en.netComputed > 0) {
+        const d = (en.p50 / en.netComputed - 1) * 100;
+        if (Math.abs(d) > 20) add('note', pre + 'p50gap', `Your P50 is ${Math.abs(d).toFixed(0)} % ${d > 0 ? 'above' : 'below'} what the power curve, wind climate and losses give here. One of them does not match your report.`, 'w.turbines');
+      }
+      const wake = rr.model.items.find(i => i.id === 'wake_int');
+      if (wake && wake.mode !== 'none' && ctx.nTurbines >= 20 && wake.L < 3) add('note', pre + 'wake', `Internal wake loss of ${wake.L.toFixed(1)} % is low for ${ctx.nTurbines} turbines.`, 'w.turbines');
+      const tot = (1 - en.eff) * 100;
+      if (tot < 8) add('note', pre + 'lowloss', `Total wind plant losses of ${tot.toFixed(1)} % are below what operating plants usually show (roughly 12–25 %).`, 'w.turbines');
+    };
+    const solarChecks = (rr, pre) => {
+      const en = rr.en, ctx = rr.model.ctx;
+      if (ctx.mount === 'tracker' && ctx.poaRatio < 1.12) add('warn', pre + 'poa', `Single-axis tracker with a plane-of-array to GHI ratio of ${ctx.poaRatio.toFixed(2)}. Trackers usually give 1.15–1.35: check the ratio.`, 's.model');
+      if (ctx.mount === 'fixed' && ctx.poaRatio > 1.25) add('warn', pre + 'poa', `Fixed tilt with a plane-of-array to GHI ratio of ${ctx.poaRatio.toFixed(2)}. That is usual only at high latitudes or with trackers.`, 's.model');
+      if (ctx.mount === 'ew' && ctx.poaRatio > 1.02) add('note', pre + 'poa', `East-west arrays usually collect a little less than GHI; the ratio is ${ctx.poaRatio.toFixed(2)}.`, 's.model');
+      const clip = rr.model.items.find(i => i.id === 'clipping');
+      if (clip && clip.mode !== 'none' && ctx.dcac > 1.5 && clip.L < 3) add('warn', pre + 'clip', `DC/AC ratio of ${ctx.dcac.toFixed(2)} with only ${clip.L.toFixed(1)} % clipping. At this ratio clipping is normally several percent.`, 's.inv');
+      if (ctx.dcac < 0.95) add('note', pre + 'dcac', `DC capacity is below AC capacity (DC/AC ${ctx.dcac.toFixed(2)}). Check both values.`, 's.inv');
+      if (en.pr > 0.9) add('warn', pre + 'pr', `Performance ratio of ${(en.pr * 100).toFixed(0)} % is higher than well-run plants achieve (usually 75–88 %). A loss is probably missing.`, 's.array');
+      else if (en.pr < 0.65) add('note', pre + 'pr', `Performance ratio of ${(en.pr * 100).toFixed(0)} % is low. Check for a loss counted twice.`, 's.array');
+      if (en.cf > 0.4) add('warn', pre + 'cf', `Solar capacity factor of ${(en.cf * 100).toFixed(0)} % on AC capacity is very high. Check GHI, DC and AC capacity.`, 's.inv');
+      if (en.p50Source === 'entered' && en.netComputed > 0) {
+        const d = (en.p50 / en.netComputed - 1) * 100;
+        if (Math.abs(d) > 15) add('note', pre + 'p50gap', `Your solar P50 is ${Math.abs(d).toFixed(0)} % ${d > 0 ? 'above' : 'below'} what the irradiation and losses give here.`, 's.array');
+      }
+    };
+    if (r.hybrid) {
+      windChecks(r.wind, 'w-'); solarChecks(r.solar, 's-');
+      const c = r.model.ctx;
+      if (c.connFrac < 0.5) add('note', 'conn', `The connection is ${(c.connFrac * 100).toFixed(0)} % of combined capacity. Curtailment at the export limit is large and depends on the hourly shape: confirm it with a time-series simulation.`, 'grid');
+    } else if (r.tech === 'solar') solarChecks(r, '');
+    else windChecks(r, '');
+    return out;
+  }
+
+  return { Z, PLEVELS, gamma, cholesky, rng, weibullFromMoments, airDensity, genericCurve, parseCurve, customCurve, curveFor, meanPower, buildContext, evalItem, buildModel, energy, combine, pvalues, contributions, evaluate, evaluateHybrid, monteCarlo, techSampler, itemSampler, climateSigma, lossAt, p50Factor, techOf, forTech, hybridStageOf, exportLimitLoss, isRes, TIER_OF_MODE, IEC_BASIS, num, clamp, lossBridge, sanity, BRIDGE_ORDER, grossOf };
 })();
 if (typeof module !== 'undefined') module.exports = Engine;
 
@@ -1875,7 +2157,14 @@ const Library = (() => {
 
   /* ---------------- Solar PV ---------------- */
   const S = 'solar';
-  const clipL = r => (r <= 1.2 ? 0.3 : r <= 1.35 ? 1.0 : r <= 1.5 ? 2.5 : 4.0);
+  /* Clipping loss (% of energy) estimated from the DC/AC ratio: a smooth curve through typical simulated
+     values, rising without a cap. Framework judgement; a time-series simulation replaces it. */
+  const CLIP_PTS = [[1.0, 0], [1.1, 0.1], [1.2, 0.3], [1.3, 1.0], [1.4, 2.2], [1.5, 3.8], [1.7, 8], [2.0, 15], [2.5, 26], [3.0, 34]];
+  const clipL = r => {
+    if (!(r > CLIP_PTS[0][0])) return 0;
+    for (let i = 1; i < CLIP_PTS.length; i++) if (r <= CLIP_PTS[i][0]) { const [x0, y0] = CLIP_PTS[i - 1], [x1, y1] = CLIP_PTS[i]; return +(y0 + (y1 - y0) * (r - x0) / (x1 - x0)).toFixed(2); }
+    return CLIP_PTS[CLIP_PTS.length - 1][1];
+  };
   const SOLAR_ITEMS = [
     {
       id: 'sat_model', tech: S, stage: 'irradiance', cat: 'irradiance_source', sub: 'satellite_model', domain: 'res', when: ctx => ctx.solarSource === 'satellite',
@@ -2075,7 +2364,7 @@ const Library = (() => {
       name: 'Inverter clipping', defaultMode: 'desc',
       calc: { fields: [{ key: 'L', label: 'Clipping loss from your simulation', unit: '%', def: 1.0, step: 0.1 }, { key: 'sub', label: 'Time step of the simulation', type: 'select', def: 'hourly', options: [['hourly', 'Hourly'], ['sub', '15 minutes or finer']] }],
         fn: x => ({ L: x.L, s: Math.max(0.2, (x.sub === 'sub' ? 0.25 : 0.5) * x.L) }), note: 's = 50 % of the loss for hourly simulations, 25 % for sub-hourly' },
-      desc: { options: [{ label: 'Estimate from the DC/AC ratio', v: ctx => { const L = clipL(ctx.dcac); return { L, s: Math.max(0.2, 0.5 * L) }; } }] },
+      desc: { options: [{ label: 'Estimate from the DC/AC ratio', v: ctx => { const L = clipL(ctx.dcac); return { L, s: Math.max(0.2, Math.min(0.5 * L, 1 + 0.2 * L)) }; } }] },
       def: { v: { L: 1.0, s: 0.5 } },
       src: ['sgsub', 'judge'],
       info: { what: 'When DC power exceeds the inverter rating, the extra is lost (unless storage captures it).', drives: 'DC/AC ratio, irradiance peaks, cloud-edge events, module degradation over time.', reduce: 'Simulate with 15-minute or finer data, especially at DC/AC ratios above about 1.3.', values: 'Solargis finds hourly data underestimates clipping, more so at higher DC/AC ratios. The estimate by DC/AC ratio is framework judgement.' },
@@ -3009,7 +3298,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
   function touch() { state.meta.updated = new Date().toISOString(); saveLocal(); updateSaveTag(); suiteSchedule(); }
 
   /* ---------- evaluation and scheduling ---------- */
-  function recompute() { result = E.evaluate(state, Lb); }
+  function recompute() { result = E.evaluate(state, Lb); firmSchedule(); }
   let raf = 0;
   function scheduleLive() { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; recompute(); updateLive(); }); }
   function rerender() { recompute(); renderStage(pvMode()); updateChrome(); }
@@ -3032,7 +3321,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
       <div class="frame">
         <nav class="rail" aria-label="Uncertainty chain"><ul class="chain" id="chain"></ul><div class="rail-foot" id="railFoot"></div></nav>
         <main class="sheet" id="sheet" tabindex="-1"></main>
-        <aside class="side" id="side" aria-label="Live result"></aside>
+        <aside class="side" id="side" aria-label="Results, updated as you type"></aside>
       </div>
       <div class="bottombar" id="bottombar"></div>`;
   }
@@ -3077,32 +3366,17 @@ if (typeof module !== 'undefined') module.exports = Plant;
   }
 
   function renderSide() {
-    const r = result, pv = r.focus.pv, p50 = r.focus.p50;
-    $('#side').innerHTML = `<div class="res-card">
-      ${hzButtons()}
-      <div class="hero"><span class="lbl">P90, ${hzLabel()} average</span>
-        <span class="big">${fx(pv.P90, 1)} <small>GWh/yr</small></span>
-        <span class="sub"><span class="ratio">${fx(pv.P90 / p50 * 100, 1)} %</span> of P50 · σ ${fx(r.focus.sigma, 2)} %</span></div>
-      <dl class="kv">
-        <dt>${hasSolar() ? 'P50 year 1' : 'P50 net at POI'}</dt><dd>${fx(r.en.p50, 1)}</dd>
-        ${hasSolar() && r.focusN > 1 ? `<dt>P50, ${hzLabel()} average</dt><dd>${fx(p50, 1)}</dd>` : ''}
-        <dt>P75</dt><dd>${fx(pv.P75, 1)}</dd>
-        <dt>P95</dt><dd>${fx(pv.P95, 1)}</dd>
-        <dt>P99</dt><dd>${fx(pv.P99, 1)}</dd>
-        <dt>Net CUF (P50)${isHybrid() ? ', on connection' : ''}</dt><dd>${fx(r.en.cf * 100, 1)} %</dd>
-        ${isHybrid() ? `<dt>Portfolio gain at P90</dt><dd>+${fx(r.focus.portfolioGain, 1)}</dd>` : ''}
-      </dl>
-      <div class="stack" style="gap:8px"><h4>Evidence behind the total</h4>${mixBar(r.mix)}${legend()}
-        ${r.none.length ? `<p class="side-note">${r.none.length} item${r.none.length > 1 ? 's' : ''} excluded.</p>` : ''}</div>
-      <button class="btn" data-stage="results">Open results</button>
-      <p class="side-note">GWh/yr. P-values assume a normal distribution of the combined uncertainty; Results also runs a Monte Carlo check.</p>
-    </div>`;
+    const side = $('#side'); if (!side) return;
+    const y = side.scrollTop, r = result, pv = r.focus.pv, p50 = r.focus.p50;
+    side.innerHTML = railHtml();
+    side.scrollTop = y;
     $('#bottombar').innerHTML = `
-      <div class="bb-fig"><span class="l">P50${hasSolar() && r.focusN > 1 ? ' ' + hzLabel() : ''}</span><span class="v">${fx(p50, 1)}</span></div>
-      <div class="bb-fig"><span class="l">P90 ${hzLabel()}</span><span class="v">${fx(pv.P90, 1)}</span></div>
+      <div class="bb-fig"><span class="l">P50${hasSolar() && r.focusN > 1 ? ' ' + hzLabel() : ''}</span><span class="v">${rrNum('bb50', p50, 1)}</span></div>
+      <div class="bb-fig"><span class="l">P90 ${hzLabel()}</span><span class="v">${rrNum('bb90', pv.P90, 1)}</span></div>
       <div class="bb-fig"><span class="l">P90/P50</span><span class="v ratio">${fx(pv.P90 / p50 * 100, 1)} %</span></div>
       <span class="grow"></span>
-      ${stage === 'results' ? '' : '<button class="btn small" data-stage="results">Results</button>'}`;
+      <button class="btn small primary" data-act="rrsheet" aria-expanded="${rr.sheet}">Results</button>`;
+    rrAnimate(side); rrAnimate($('#bottombar'));
   }
 
   function updateSaveTag() {
@@ -3331,8 +3605,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
         ${numField({ path: 'pv.poaRatio', label: 'Plane-of-array to GHI ratio', step: 0.01, hint: 'From your simulation. Typical: fixed tilt about 1.05–1.15, single-axis tracker about 1.15–1.30 at low latitudes.' })}
       </div></section>
       <section class="panel"><header><h3>${hyb ? 'Solar P50, year 1, before shared grid losses' : 'Net P50, year 1'}</h3><span class="computed">In use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></span></header>
-        ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
-        ${getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before export line, grid availability and curtailment' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Irradiation on the array × DC capacity × the product of the losses you set (the performance ratio).${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your simulation\'s year-1 P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
+        ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+        ${getPath(state, ep + '.p50Mode') === 'gross' ? `<div class="grid2">${numField({ path: ep + '.gross', label: 'Energy before losses (DC capacity × array irradiation)', unit: 'GWh/yr', step: 0.1, hint: 'From your PV simulation, before any loss.' })}</div><p class="note">The losses you set take this to the P50. Tool estimate of the gross for comparison: <b>${fx(C().en.grossTool, 1)} GWh/yr</b>.</p>` : getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before export line, grid availability and curtailment' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Irradiation on the array × DC capacity × the product of the losses you set (the performance ratio).${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your simulation\'s year-1 P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
       </section>`;
   }
   function windPanels() {
@@ -3361,8 +3635,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
         ${numField({ path: 'climate.k', label: 'Weibull shape factor k', step: 0.05, hint: 'Typically 1.8–2.4. Higher values mean a narrower distribution.' })}
       </div></section>
       <section class="panel"><header><h3>${hyb ? 'Wind P50 before shared grid losses' : 'Net P50'}</h3><span class="computed">In use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></span></header>
-        ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
-        ${state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before export line, grid availability and curtailment' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">The tool still uses the power curve and wind climate to convert wind speed uncertainty into energy. Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Gross energy from the power curve and Weibull distribution, less the plant losses you set.${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your consultant\'s P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
+        ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+        ${state.energy.p50Mode === 'gross' ? `<div class="grid2">${numField({ path: 'energy.gross', label: 'Gross energy of all turbines, before wakes and every other loss', unit: 'GWh/yr', step: 0.1, hint: 'Free-stream energy from your wind flow or wake model.' })}</div><p class="note">The losses you set take this to the P50. Tool estimate of the gross for comparison: <b>${fx(C().en.grossTool, 1)} GWh/yr</b>.</p>` : state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before export line, grid availability and curtailment' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">The tool still uses the power curve and wind climate to convert wind speed uncertainty into energy. Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Gross energy from the power curve and Weibull distribution, less the plant losses you set.${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your consultant\'s P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
       </section>`;
   }
   function withComp(c, fn) { const prev = comp; comp = c; try { return fn(); } finally { comp = prev; } }
@@ -3677,7 +3951,6 @@ if (typeof module !== 'undefined') module.exports = Plant;
   }
   function stageSupply() {
     const sp = state.supply, preset = Firm.PRESETS[sp.preset] || Firm.PRESETS.fdre4, key = firmKey();
-    const stale = firm.res && firm.key !== key;
     const prof = sp.profile || {};
     return `${stageHead('supply')}<div class="stack">
       <section class="panel"><header><h3>Supply obligation</h3></header>
@@ -3711,13 +3984,12 @@ if (typeof module !== 'undefined') module.exports = Plant;
         <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
           ${segField({ path: 'supply.year', label: 'Operating year', options: [['1', 'Year 1'], ['10', 'Year 10'], ['life', 'Year ' + lifeN()]] })}
           <div style="width:170px">${selField({ path: 'supply.samples', label: 'Simulated years', options: [['200', '200'], ['400', '400'], ['1000', '1,000'], ['2000', '2,000']] })}</div>
-          <button class="btn primary" data-act="firmrun" ${firm.running ? 'disabled' : ''}>${firm.running ? 'Running…' : firm.res ? 'Run again' : 'Run simulation'}</button>
-          <button class="btn" data-act="firmdrivers" ${firm.running || !firm.res ? 'disabled' : ''}>Find what drives the risk</button>
+          <span data-live="firmctl|" style="display:contents">${LIVE.firmctl()}</span>
         </div>
         <p class="status" id="firmStatus">${esc(firm.progress)}</p>
         <p class="formula">Each simulated year draws wind and solar energy from the uncertainty chain (one-year horizon${isHybrid() ? ', with the wind–solar correlations' : ''}), reshuffles days within each month, and draws battery capacity, fade, efficiency, outages and dispatch shortfall. Dispatch is hourly and rule-based.</p>
       </section>
-      ${firm.res ? `${stale ? '<p class="warn">Inputs changed since this run. Run again to update.</p>' : ''}${firmResults()}` : ''}
+      <div class="stack" data-live="firmres|">${LIVE.firmres()}</div>
       </div>${stageNav('supply')}`;
   }
 
@@ -3800,7 +4072,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
   }
 
   async function runFirm(withDrivers) {
-    if (firm.running) return;
+    if (firm.running) { if (firm.auto) setTimeout(() => runFirm(withDrivers), 150); return; }   // wait for the background run
     firm.running = true; firm.progress = 'Preparing hourly profiles…';
     if (pvMode() || stage === 'supply') renderStage(true);
     await new Promise(r => setTimeout(r, 20));
@@ -3815,7 +4087,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
         firm.res = await Firm.run(prep, { n, year }, tick);
         firm.central = Firm.central(prep, year);
         firm.drivers = null;
-        firm.key = firmKey();
+        firm.key = firmKey(); firm.centralKey = firm.key;
       }
       firm.progress = withDrivers ? 'Done.' : `Done: ${n.toLocaleString('en')} years simulated.`;
     } catch (e) {
@@ -3989,7 +4261,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     return `${stageHead('results')}<div class="stack" style="gap:22px">
       <div style="max-width:420px">${hzButtons()}</div>
       <div class="tiles">
-        <div class="tile"><span class="lbl">Net P50 at the POI${hasSolar() ? ', year 1' : ''}</span><span class="val">${fx(r.en.p50, 1)} <small>GWh/yr</small></span><span class="sub">CUF ${fx(r.en.cf * 100, 1)} % · ${r.en.p50Source === 'entered' ? 'from your report' : 'tool estimate'}${hasSolar() && r.focusN > 1 ? ` · ${hzLabel()} avg ${fx(p50, 1)}` : ''}</span></div>
+        <div class="tile"><span class="lbl">Net P50 at the POI${hasSolar() ? ', year 1' : ''}</span><span class="val">${fx(r.en.p50, 1)} <small>GWh/yr</small></span><span class="sub">CUF ${fx(r.en.cf * 100, 1)} % · ${r.en.p50Source === 'entered' ? 'from your report' : r.en.p50Source === 'gross' ? 'your gross, less losses' : 'tool estimate'}${hasSolar() && r.focusN > 1 ? ` · ${hzLabel()} avg ${fx(p50, 1)}` : ''}</span></div>
         <div class="tile key"><span class="lbl">P90, ${hzLabel()} average</span><span class="val">${fx(pv.P90, 1)} <small>GWh/yr</small></span><span class="sub">${fx(pv.P90 / p50 * 100, 1)} % of P50</span></div>
         <div class="tile"><span class="lbl">Total uncertainty (σ)</span><span class="val">${fx(r.focus.sigma, 2)} <small>%</small></span><span class="sub">${isHybrid() ? `wind ${fx(r.focus.parts.wind.sigma, 2)} %, solar ${fx(r.focus.parts.solar.sigma, 2)} % on their own` : `${resWord()} part ${fx(r.focus.comb.wsSigma, 2)} % × S ${fx(r.en.S, 2)}`}</span></div>
         <div class="tile"><span class="lbl">P99, ${hzLabel()} average</span><span class="val">${fx(pv.P99, 1)} <small>GWh/yr</small></span><span class="sub">${fx(pv.P99 / p50 * 100, 1)} % of P50</span></div>
@@ -3997,6 +4269,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
       <section class="panel"><header><h3>P-values</h3></header>${pTable()}</section>
       ${isHybrid() ? `<section class="panel"><header><h3>Wind and solar together</h3><span class="computed">${hzLabel()}</span></header>${hybridSummary()}</section>` : ''}
       ${firmSummary()}
+      <section class="panel"><header><h3>Gross to net</h3><span class="computed">${hzLabel()} average</span><button class="btn small" data-act="losscsv">Download CSV</button></header>${lossTable()}</section>
       <section class="panel"><header><h3>Where the uncertainty comes from</h3><span class="computed">share of total variance, ${hzLabel()}</span></header>${stageBars()}${legend()}</section>
       <section class="panel"><header><h3>Largest single items</h3></header>${topItems(10)}</section>
       <section class="panel"><header><h3>What the total rests on</h3></header>${mixBar(r.mix, true)}${legend()}<p>${mixText ? 'Of the variance: ' + mixText + '.' : ''} ${r.none.length ? r.none.length + ' item' + (r.none.length > 1 ? 's are' : ' is') + ' excluded.' : 'No items are excluded.'}</p></section>
@@ -4056,7 +4329,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
   const pvView = () => (isHybrid() ? (pv.view === 'wind' || pv.view === 'solar' ? pv.view : 'site') : ptech());
   const pvOrder = () => { const v = pvView(); const o = Plant.orderFor(state, v); return o; };
   const farmOf = id => (!id ? null : id === 'w' || id.startsWith('w.') ? 'wind' : id === 's' || id.startsWith('s.') ? 'solar' : null);
-  const pvComp = () => (isHybrid() ? (pv.sel ? farmOf(pv.sel) : pvView() === 'site' ? null : pvView()) : null);
+  const pvPart = () => (pv.sel && pv.sel !== 'setup' ? pv.sel : null);   // the selected plant part; 'setup' is the project panel
+  const pvComp = () => (isHybrid() ? (pvPart() ? farmOf(pv.sel) : pvView() === 'site' ? null : pvView()) : null);
   const isDesk = () => ptech() !== 'solar' && state.setup.dataSource === 'desktop';
   function pvName(id) {
     const m = PC[id]; if (!m) return id;
@@ -4070,7 +4344,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
   function pvNormalise() {
     if (!isHybrid()) pv.view = null; else if (!['site', 'wind', 'solar'].includes(pv.view)) pv.view = 'site';
     const ok = pvOrder();
-    if (pv.sel && !ok.includes(pv.sel)) pv.sel = null;
+    if (pv.sel && pv.sel !== 'setup' && !ok.includes(pv.sel)) pv.sel = null;
     if (!pv.sel) pv.open.clear();
   }
   function pvSummarise() { pv.sum = Plant.summarise(state, result, E, Lb); return pv.sum; }
@@ -4338,7 +4612,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
     const t = ptech();
     return `<div class="pv-bar">
       <div class="pv-pick"><div class="seg" role="group" aria-label="Plant type">${[['wind', 'Wind'], ['solar', 'Solar PV'], ['hybrid', 'Hybrid']].map(([k, l]) => `<button data-set="tech" data-val="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</div>
-        <button class="pv-chip" data-set="bess.enabled" data-type="bool" data-val="${!hasBess()}" aria-pressed="${hasBess()}">${hasBess() ? '<span aria-hidden="true">✓</span> Battery' : '+ Battery'}</button></div>
+        <button class="pv-chip" data-set="bess.enabled" data-type="bool" data-val="${!hasBess()}" aria-pressed="${hasBess()}">${hasBess() ? '<span aria-hidden="true">✓</span> Battery' : '+ Battery'}</button>
+        <button class="pv-chip set" data-pc="setup" aria-pressed="${pv.sel === 'setup'}">Project set-up</button></div>
       <div class="pv-tot" data-live="pvbar|">${pvBarTot()}</div>
       <div class="pv-hz">${hzButtons()}</div>
     </div>`;
@@ -4506,7 +4781,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     }
   }
   function pvKey() {
-    return `<div class="pv-key"><span><i class="heatk"></i>Shading: share of the total uncertainty</span><span>${ring({ calc: 0.25, site: 0.25, desc: 0.25, generic: 0.25 }, 14)} Ring: evidence behind it</span>${legend()}</div>`;
+    return `<div class="pv-key">${pvPart() ? '' : '<b class="pv-hint">Select a part of the plant to change its inputs. Results on the right follow every change.</b>'}<span><i class="heatk"></i>Shading: share of the total uncertainty</span><span>${ring({ calc: 0.25, site: 0.25, desc: 0.25, generic: 0.25 }, 14)} Ring: evidence behind it</span>${legend()}</div>`;
   }
   function pvRefresh() {
     if (!pvMode()) return;
@@ -4551,15 +4826,15 @@ if (typeof module !== 'undefined') module.exports = Plant;
     const farm = isHybrid() && (v === 'wind' || v === 'solar');
     const blurb = v === 'site' ? 'A wind farm and a solar farm behind one grid connection. Select a farm to open its parts, or a shared part to see its categories.' : farm ? `Select a part of the ${v} farm to see its uncertainty categories.` : 'Select a part of the plant to see its uncertainty categories and give your inputs.';
     return `<div class="insp-in">
-      <div class="insp-top"><span class="eyebrow"><span>${esc(state.meta.name || 'Untitled project')}</span></span><span class="grow"></span>${farm ? '<button class="btn small" data-act="pvview" data-val="site">← Site</button>' : ''}</div>
-      ${exampleWarn()}<h2>${esc(pvTitle())}</h2><p class="insp-what">${blurb}</p>
+      <div class="insp-top"><span class="eyebrow"><span>${esc(state.meta.name || 'Untitled project')}</span></span><span class="grow"></span>${farm ? '<button class="btn small" data-act="pvview" data-val="site">← Site</button>' : ''}<button class="btn small" data-act="pvclose" aria-label="Close project set-up">Close</button></div>
+      <h2>${esc(pvTitle())}</h2><p class="insp-what">${blurb}</p>
       <div class="stack" data-live="pvsum|">${pvSummaryLive()}</div>
       ${isHybrid() && v === 'site' ? `<details class="pv-setup" data-sk="hybsum"${skOpen('hybsum')}><summary>Wind and solar together</summary><div class="pv-setup-in" data-live="hybsum|">${hybridSummary()}</div></details>` : ''}
-      ${!farm ? `<details class="pv-setup" data-sk="project"${skOpen('project')}><summary>Project set-up <span>${esc(lifeN() + '-year life' + (hasBess() ? ' · battery' : ''))}</span></summary><div class="pv-setup-in">
+      ${!farm ? `<details class="pv-setup" data-sk="project"${skOpen('project', true)}><summary>Project set-up <span>${esc(lifeN() + '-year life' + (hasBess() ? ' · battery' : ''))}</span></summary><div class="pv-setup-in">
         <div class="grid2">${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div>
         <div class="grid2">${numField({ path: 'horizon.life', label: 'Project lifetime', unit: 'years', step: 1, min: 1, rerender: true })}</div>
         ${segField({ path: 'bess.enabled', label: 'Battery and firm supply', type: 'bool', options: [['false', 'No'], ['true', 'Yes']] })}</div></details>` : ''}
-      <div class="insp-actions"><button class="btn primary" data-stage="results">Full results</button><button class="btn" data-act="mode" data-val="steps">Step-by-step view</button></div>
+      <div class="insp-actions"><button class="btn" data-act="mode" data-val="steps">Step-by-step view</button></div>
     </div>`;
   }
   function compStatHtml(id) {
@@ -4630,7 +4905,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
           ${segField({ path: 'site.rhoMode', label: 'Air density at hub height', options: [['calc', 'From elevation and temperature'], ['entered', 'Enter a value']] })}
           <div class="grid2">${state.site.rhoMode === 'entered' ? numField({ path: 'site.rho', label: 'Air density', unit: 'kg/m³', step: 0.005 }) : numField({ path: 'site.elevation', label: 'Hub elevation', unit: 'm', step: 10 }) + numField({ path: 'site.tempC', label: 'Mean temperature at hub', unit: '°C', step: 0.5 })}</div>
           <p class="computed">In use: <b data-live="rho|${k}">${fx(C().en.rho, 3)} kg/m³</b> · sensitivity S <b data-live="sens|">${fx(C().en.S, 2)}</b></p>
-          ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
+          ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+          ${state.energy.p50Mode === 'gross' ? `<div class="grid2">${numField({ path: 'energy.gross', label: 'Gross energy of all turbines, before wakes and other losses', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           ${state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before shared grid losses' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           <p class="computed">P50 in use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></p>
           ${segField({ path: 'energy.sensMode', label: 'Wind-speed-to-energy sensitivity', options: [['computed', 'From the power curve'], ['entered', 'From my report']] })}
@@ -4649,7 +4925,8 @@ if (typeof module !== 'undefined') module.exports = Plant;
       case 's.array': return { sum: `${fx(+state.pv.dcMWp, 0)} MWp · ${{ fixed: 'fixed tilt', tracker: 'single-axis tracker', ew: 'east-west' }[state.pv.mount] || ''}${state.pv.bifacial ? ' · bifacial' : ''}`, body: `<div class="grid2">${numField({ path: 'pv.dcMWp', label: 'DC capacity', unit: 'MWp', step: 0.1 })}</div>
           ${segField({ path: 'pv.mount', label: 'Mounting', options: [['fixed', 'Fixed tilt'], ['tracker', 'Single-axis tracker'], ['ew', 'East-west']] })}
           ${segField({ path: 'pv.bifacial', label: 'Modules', type: 'bool', options: [['false', 'Monofacial'], ['true', 'Bifacial']] })}
-          ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
+          ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+          ${getPath(state, ep + '.p50Mode') === 'gross' ? `<div class="grid2">${numField({ path: ep + '.gross', label: 'Energy before losses (DC capacity × array irradiation)', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           ${getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before shared grid losses' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           <p class="computed">P50 in use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></p>` };
       case 's.inv': return { sum: `${fx(+state.pv.acMW, 0)} MWac · DC/AC ${fx((+state.pv.dcMWp || 0) / Math.max(0.01, +state.pv.acMW || 0), 2)}`, body: `<div class="grid2">${numField({ path: 'pv.acMW', label: 'AC capacity (inverter or export limit)', unit: 'MW', step: 0.1 })}</div><p class="computed">DC/AC ratio <b data-live="dcac|">${LIVE.dcac()}</b></p>` };
@@ -4668,17 +4945,21 @@ if (typeof module !== 'undefined') module.exports = Plant;
     const s = setupFor(id); if (!s) return '';
     return `<details class="pv-setup" data-sk="${esc(id)}"${skOpen(id, s.open)}><summary>Set-up <span>${s.sum}</span></summary><div class="pv-setup-in">${s.body}</div></details>`;
   }
-  function inspBuyer() {
+  function buyerStat() {
     const r = firm.res, stale = r && firm.key !== firmKey();
-    return `<div class="stack">
-      ${r ? `${stale ? '<p class="warn">Inputs changed since this run. Run again to update.</p>' : ''}<div class="pv-stat"><div><b>${fx(r.pMeet * 100, 0)} %</b><span>chance of meeting every rule, year ${r.year}</span></div><div><b>${fx(r.failedMonths, 1)}</b><span>months below target a year</span></div></div>
+    return r ? `<div class="pv-stat${stale ? ' stale' : ''}"><div><b>${fx(r.pMeet * 100, 0)} %</b><span>chance of meeting every rule, year ${r.year}${stale ? ' · updating' : ''}</span></div><div><b>${fx(r.failedMonths, 1)}</b><span>months below target a year</span></div></div>
         <dl class="kv"><dt>Shortfall P50 / P90</dt><dd>${fx(r.shortfall.p50 / 1000, 2)} / ${fx(r.shortfall.p90 / 1000, 2)} GWh</dd>${state.supply.tariff > 0 ? `<dt>Penalty P50 / P90</dt><dd>${money(r.penalty.p50)} / ${money(r.penalty.p90)}</dd>` : ''}<dt>Delivered with storage, P50</dt><dd>${fx(r.delivered.p50 / 1000, 1)} GWh/yr</dd><dt>Curtailed, P50</dt><dd>${fx(r.curtailed.p50 / 1000, 1)} GWh/yr</dd></dl>`
-        : '<p class="note">Not simulated yet. The simulation runs the plant and battery hour by hour against the demand, over hundreds of possible years.</p>'}
+      : '<p class="note">Simulating the plant and battery hour by hour against the demand, over hundreds of possible years…</p>';
+  }
+  function inspBuyer() {
+    const r = firm.res;
+    return `<div class="stack">
+      <div class="stack" data-live="firmbuyer|">${buyerStat()}</div>
       <div class="grid2">${numField({ path: 'supply.contractMW', label: 'Contracted capacity', unit: 'MW', step: 1, min: 0 })}${numField({ path: 'supply.tariff', label: 'Tariff', unit: (state.supply.currency || 'INR') + '/kWh', step: 0.01, min: 0 })}</div>
       ${segField({ path: 'supply.preset', label: 'Rule set', options: Object.entries(Firm.PRESETS).map(([kk, v]) => [kk, v.label]) })}
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="firmrun" ${firm.running ? 'disabled' : ''}>${firm.running ? 'Running…' : r ? 'Run again' : 'Run simulation'}</button><button class="btn" data-stage="supply">All supply settings</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-stage="supply">All supply settings</button></div>
       <p class="status" id="firmStatus">${esc(firm.progress)}</p>
-      <p class="side-note">Peak hours, hourly profiles, the penalty multiple and what drives the risk are under All supply settings.</p></div>`;
+      <p class="side-note">The simulation reruns after every change. Peak hours, hourly profiles, the penalty multiple and what drives the risk are under All supply settings.</p></div>`;
   }
   function inspLink() {
     return `<div class="stack"><div class="pv-stat"><div><b>${pv.sum.cross.var >= 0 ? '+' : '−'}${fx(Math.abs(pv.sum.cross.share) * 100, 1)} %</b><span>of the total variance</span></div><div><b>${result.focus.portfolioGain >= 0 ? '+' : ''}${fx(result.focus.portfolioGain, 1)}</b><span>GWh/yr portfolio gain at P90</span></div></div>
@@ -4699,7 +4980,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
       ${id !== 'buyer' && id !== 'link' && id !== 'bess' ? '<p class="side-note">σ values are one standard deviation of energy. Each category shows its share of the plant total; categories inside a part combine as the root of the sum of squares.</p>' : ''}
     </div>`;
   }
-  function inspectorHtml() { return pv.sel ? inspComp(pv.sel) : inspPlant(); }
+  function inspectorHtml() { return pv.sel === 'setup' ? inspPlant() : pv.sel ? inspComp(pv.sel) : ''; }
 
   /* ---------- render ---------- */
   function renderPlant(keep) {
@@ -4714,7 +4995,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     pvNormalise(); pvSummarise();
     comp = pvComp();
     document.body.classList.toggle('pv-on', true);
-    sheet.innerHTML = `<div class="pv${pv.sel ? ' has-sel' : ''}${pv.full ? ' full' : ''}">${pvBar()}<div class="pv-body"><div class="pv-stage" id="pvStage"></div><aside class="pv-insp" id="pvInsp" aria-label="Details">${inspectorHtml()}</aside></div></div>`;
+    sheet.innerHTML = `<div class="pv${pvPart() ? ' has-sel' : ''}${pv.sel ? ' has-insp' : ''}${pv.full ? ' full' : ''}">${pvBar()}${state.meta.example ? '<p class="warn pv-ex">These are example values for a fictional project so you can see the tool working. Change any input, or start your own from Projects.</p>' : ''}<div class="pv-body"><div class="pv-stage" id="pvStage"></div>${pv.sel ? `<aside class="pv-insp" id="pvInsp" aria-label="${pv.sel === 'setup' ? 'Project set-up' : 'Inputs for the selected part'}">${inspectorHtml()}</aside>` : ''}</div></div>`;
     renderCanvas();
     if (!pv.ro && window.ResizeObserver) {
       pv.ro = new ResizeObserver(() => { if (!pvMode()) return; const st = $('#pvStage'); if (!st) return; const want = st.clientWidth >= 560 ? 'wide' : 'narrow'; if (want !== pv.layout) renderCanvas(); else if (want === 'wide') pvPlace(); });
@@ -4765,6 +5046,364 @@ if (typeof module !== 'undefined') module.exports = Plant;
   LIVE.pvsum = () => pvSummaryLive();
   LIVE.pvc = id => compStatHtml(id);
   LIVE.pvg = key => { const [cid, gid] = key.split('~'); return grpStat(cid, gid); };
+  LIVE.firmbuyer = () => buyerStat();
+
+
+  /* WattOdds — energy yield uncertainty, source to meter.
+     Copyright 2026 Nithish Seenivasagam (coderenewables.com)
+     SPDX-License-Identifier: Apache-2.0 */
+  /* ======================= Results rail =======================
+     The results that stay on screen in both views: P50 to P99, the odds curve, the bridge from
+     gross to net, what drives the uncertainty, checks on the inputs and, with a battery, the
+     hourly simulation. It is redrawn on every change to the project; numbers that moved are
+     marked with how far they moved, and a pinned baseline shows the difference from an earlier
+     state of the same project. */
+  const RR_BASE_KEY = 'wattodds:baseline:v1';
+  const rr = { open: new Set(), all: false, prev: {}, prevHz: null, chg: {}, base: null, baseSnaps: {}, sheet: false };
+  (() => { try { const o = JSON.parse(localStorage.getItem(RR_BASE_KEY) || 'null'); if (o && o.state && o.id) rr.base = o; } catch (e) { /* storage unavailable */ } })();
+  const saveBase = () => { try { if (rr.base) localStorage.setItem(RR_BASE_KEY, JSON.stringify(rr.base)); else localStorage.removeItem(RR_BASE_KEY); } catch (e) { /* ignore */ } };
+  const reduceMotion = () => !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const ncdf = z => { const t = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2); const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return z > 0 ? 1 - p : p; };
+
+  /* the numbers a baseline is compared on */
+  function rrSnap(r) {
+    const f = r.focus, b = E.lossBridge(r, r.focusN);
+    const groups = {}, items = {};
+    b.groups.forEach(g => { groups[g.id] = g.lost; });
+    b.steps.forEach(s => { items[s.key] = s.lost; });
+    return { p50: f.p50, p90: f.pv.P90, p99: f.pv.P99, sigma: f.sigma, ratio: f.p50 > 0 ? f.pv.P90 / f.p50 * 100 : 0, gross: b.gross, net: b.net, lossPct: b.lossPct, groups, items, bridge: b };
+  }
+  /* the baseline at the period on screen (it is re-evaluated when the period changes) */
+  function rrBase() {
+    if (!rr.base || rr.base.id !== state.meta.id) return null;
+    const hz = String(state.view.horizon == null ? 10 : state.view.horizon) + '|' + lifeN();
+    if (!rr.baseSnaps[hz]) {
+      try { const s = clone(rr.base.state); s.view = Object.assign({}, s.view, { horizon: state.view.horizon }); s.horizon = Object.assign({}, s.horizon, { life: state.horizon.life }); rr.baseSnaps[hz] = rrSnap(E.evaluate(s, Lb)); }
+      catch (e) { return null; }
+    }
+    return rr.baseSnaps[hz];
+  }
+  function pinBase() { rr.base = { id: state.meta.id, at: new Date().toISOString(), state: clone(state) }; rr.baseSnaps = {}; saveBase(); renderSide(); }
+  function clearBase() { rr.base = null; rr.baseSnaps = {}; saveBase(); renderSide(); }
+  function revertBase() {
+    if (!rr.base || rr.base.id !== state.meta.id) return;
+    const view = state.view; state = clone(rr.base.state); state.view = view;
+    mc = null; touch(); recompute(); renderStage(true); updateChrome();
+  }
+
+  /* difference from the baseline as a small tag; up is good unless stated */
+  function rrDelta(cur, base, d, opts) {
+    if (base == null || !isFinite(base) || !isFinite(cur)) return '';
+    const o = opts || {}, diff = cur - base;
+    if (Math.abs(diff) < 0.5 * Math.pow(10, -d)) return o.same ? `<span class="rr-d same" title="Same as the baseline">no change</span>` : '';
+    const good = (diff > 0) === (o.goodUp !== false);
+    return `<span class="rr-d ${good ? 'good' : 'bad'}" title="Against the baseline">${diff > 0 ? '+' : '−'}${fx(Math.abs(diff), d)}${o.unit || ''}</span>`;
+  }
+  /* a number that is tracked between redraws: data-n key, data-v value, data-d decimals */
+  const rrNum = (key, v, d, opts) => { const o = opts || {}; return `<span class="rr-n" data-n="${key}" data-v="${isFinite(v) ? v : ''}" data-d="${d}" data-pre="${esc(o.pre || '')}" data-good="${o.goodUp === false ? 'down' : 'up'}">${esc(o.pre || '')}${fx(v, d)}</span>`; };
+
+  /* after a redraw: count numbers up or down from their last value and tag the change */
+  function rrAnimate(root) {
+    const hz = String(state.view.horizon) + '|' + ptech() + '|' + state.meta.id, same = rr.prevHz === hz, now = Date.now(), quiet = reduceMotion();
+    $$('[data-n]', root).forEach(el => {
+      const k = el.dataset.n, v = parseFloat(el.dataset.v), d = +el.dataset.d || 0, p = rr.prev[k];
+      if (!isFinite(v)) return;
+      if (same && p != null && isFinite(p) && Math.abs(v - p) >= 0.5 * Math.pow(10, -d)) {
+        rr.chg[k] = { diff: v - p, t: now };
+        if (!quiet) {
+          const pre = el.dataset.pre || '', t0 = performance.now(), dur = 320;
+          const step = t => { const u = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - u, 3); if (!el.isConnected) return; el.textContent = pre + fx(p + (v - p) * e, d); if (u < 1) requestAnimationFrame(step); };
+          el.textContent = pre + fx(p, d); requestAnimationFrame(step);
+        }
+      }
+      rr.prev[k] = v;
+      const c = rr.chg[k];
+      if (c && now - c.t < 2600 && el.parentElement) {
+        const good = (c.diff > 0) === (el.dataset.good !== 'down');
+        const tag = document.createElement('span');
+        tag.className = 'rr-chg ' + (good ? 'good' : 'bad'); tag.setAttribute('aria-hidden', 'true');
+        tag.style.animationDelay = (-(now - c.t)) + 'ms';
+        tag.textContent = (c.diff > 0 ? '▲ ' : '▼ ') + fx(Math.abs(c.diff), d);
+        el.insertAdjacentElement('afterend', tag);
+      } else if (c) delete rr.chg[k];
+    });
+    rr.prevHz = hz;
+    // bars and markers glide from where they were
+    if (!quiet) $$('[data-ak]', root).forEach(el => {
+      const k = 'ak:' + el.dataset.ak, cur = el.getAttribute('style') || '', was = rr.prev[k];
+      if (same && was != null && was !== cur) { el.setAttribute('style', was); void el.offsetWidth; el.setAttribute('style', cur); }
+      rr.prev[k] = cur;
+    }); else $$('[data-ak]', root).forEach(el => { rr.prev['ak:' + el.dataset.ak] = el.getAttribute('style') || ''; });
+  }
+
+  /* ---------- the odds curve ---------- */
+  function rrCurve(base) {
+    const f = result.focus, p50 = f.p50, sd = Math.max(1e-9, p50 * f.sigma / 100);
+    const W = 340, H = 138, m = { l: 6, r: 6, t: 22, b: 20 };
+    let lo = p50 - 3.4 * sd, hi = p50 + 3.4 * sd, bsd = 0;
+    if (base) { bsd = Math.max(1e-9, base.p50 * base.sigma / 100); lo = Math.min(lo, base.p50 - 3.4 * bsd); hi = Math.max(hi, base.p50 + 3.4 * bsd); }
+    lo = Math.max(0, lo);
+    const x = v => m.l + (v - lo) / (hi - lo) * (W - m.l - m.r);
+    const peak = base ? Math.max(1, sd / bsd) : 1;         // tallest curve fills the plot
+    const y = h => H - m.b - h / peak * (H - m.t - m.b);
+    const path = (mu, s, scale, from, to) => { let d = ''; const a = from == null ? lo : from, b = to == null ? hi : to, n = 72; for (let i = 0; i <= n; i++) { const v = a + (b - a) * i / n, z = (v - mu) / s; d += (i ? 'L' : 'M') + x(v).toFixed(1) + ' ' + y(scale * Math.exp(-z * z / 2)).toFixed(1); } return d; };
+    const pv = f.pv, y0 = (H - m.b).toFixed(1);
+    const tail = path(p50, sd, 1, lo, pv.P90) + `L${x(pv.P90).toFixed(1)} ${y0}L${x(lo).toFixed(1)} ${y0}Z`;
+    const body = path(p50, sd, 1, pv.P90, hi) + `L${x(hi).toFixed(1)} ${y0}L${x(pv.P90).toFixed(1)} ${y0}Z`;
+    const marks = [['P99', pv.P99], ['P90', pv.P90], ['P75', pv.P75], ['P50', pv.P50]];
+    let lastX = -99;
+    const mk = marks.map(([n, v]) => {
+      const xx = x(v), z = (v - p50) / sd, yy = y(Math.exp(-z * z / 2));
+      const show = xx - lastX > 26; if (show) lastX = xx;
+      return `<g class="mk ${n.toLowerCase()}" data-ak="mk-${n}" style="transform:translateX(${xx.toFixed(1)}px)"><line x1="0" x2="0" y1="${(yy - 4).toFixed(1)}" y2="${y0}"/>${show ? `<text y="${Math.max(9, yy - 9).toFixed(1)}" text-anchor="middle">${n}</text>` : ''}</g>`;
+    }).join('');
+    const ghost = base ? `<path class="ghost" d="${path(base.p50, bsd, sd / bsd)}"/>` : '';
+    const t0 = fx(lo, 0), t1 = fx(hi, 0);
+    return `<svg class="rr-curve" viewBox="0 0 ${W} ${H}" role="img" aria-label="Range of outcomes, ${esc(hzLabel())} average: P50 ${fx(p50, 1)}, P90 ${fx(pv.P90, 1)} GWh per year">
+      <path class="tail" d="${tail}"/><path class="body" d="${body}"/>${ghost}<path class="ln" d="${path(p50, sd, 1)}"/>
+      <line class="ax" x1="${m.l}" x2="${W - m.r}" y1="${y0}" y2="${y0}"/>${mk}
+      <text class="tk" x="${m.l}" y="${H - 5}">${t0}</text><text class="tk" x="${W - m.r}" y="${H - 5}" text-anchor="end">${t1} GWh/yr</text>
+      <line class="cur" id="rrCur" x1="0" x2="0" y1="${m.t - 6}" y2="${y0}"/>
+      <rect class="hit" x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H - m.b}" data-odds="1" data-lo="${lo}" data-hi="${hi}" data-p50="${p50}" data-sd="${sd}" data-w="${W}" data-ml="${m.l}" data-mr="${m.r}"/>
+    </svg>`;
+  }
+  function rrLevels(base) {
+    const f = result.focus, pv = f.pv;
+    return `<div class="rr-lv" role="table" aria-label="Exceedance levels">${E.PLEVELS.map(p => `<div class="${p === 'P90' ? 'key' : ''}" role="row"><span class="l" role="rowheader">${p}</span><span class="v" role="cell">${rrNum('lv-' + p, pv[p], 1)}</span><span class="s" role="cell">${p === 'P50' ? 'GWh/yr' : fx(pv[p] / f.p50 * 100, 1) + ' %'}</span>${base && p !== 'P50' && p !== 'P90' ? '' : ''}</div>`).join('')}</div>`;
+  }
+
+  /* ---------- gross to net ---------- */
+  const COMP_TAG = { wind: 'W', solar: 'S', hybrid: '' };
+  function rrBridge(b, base) {
+    const visible = b.groups.filter(g => Math.abs(g.lost) > 1e-9 || g.steps.some(s => !s.excluded && s.L !== 0));
+    const runs = [b.gross, b.net]; b.steps.forEach(s => { runs.push(s.before, s.after); });
+    const top = Math.max(...runs), bot = Math.min(...runs), span = Math.max(1e-9, top - bot);
+    const lo = Math.max(0, bot - span * 0.3), hi = top + span * 0.02;
+    const X = v => Math.max(0, Math.min(100, (v - lo) / (hi - lo) * 100));
+    const seg = (a, c, cls, key) => { const l = Math.min(X(a), X(c)), w = Math.max(0.8, Math.abs(X(a) - X(c))); return `<i class="${cls}" data-ak="${key}" style="left:${l.toFixed(2)}%;width:${w.toFixed(2)}%"></i>`; };
+    const full = (v, cls, key, split) => {
+      if (split && split.length > 1) { let acc = 0; const tot = split.reduce((a, s) => a + s.gross, 0) || 1; return split.map((s, i) => { const l = acc; acc += X(v) * s.gross / tot; return `<i class="${cls} ${s.comp}" data-ak="${key}-${i}" style="left:${l.toFixed(2)}%;width:${Math.max(0.8, acc - l - (i < split.length - 1 ? 0.6 : 0)).toFixed(2)}%" data-tip="${esc(s.name)}: ${fx(s.gross, 1)} GWh/yr"></i>`; }).join(''); }
+      return `<i class="${cls}" data-ak="${key}" style="left:0;width:${Math.max(0.8, X(v)).toFixed(2)}%"></i>`;
+    };
+    const val = (lost, L) => `<span class="bv">${lost < 0 ? '+' : '−'}${fx(Math.abs(lost), Math.abs(lost) < 10 ? 2 : 1)}<small>${fx(Math.abs(L), Math.abs(L) < 10 ? 2 : 1)} %</small></span>`;
+    const HEAD = { wind: 'Wind plant', solar: 'Solar plant', hybrid: 'Shared connection' };
+    let lastComp = null;
+    const rows = visible.map(g => {
+      const open = rr.all || rr.open.has(g.id), gain = g.lost < 0;
+      let head = '';
+      if (g.comp && g.comp !== lastComp) {   // a hybrid: one block per plant, then the shared connection
+        lastComp = g.comp;
+        const mine = visible.filter(x => x.comp === g.comp), a = mine[0].streamBefore, z = mine[mine.length - 1].streamAfter;
+        head = `<div class="br-head ${g.comp}"><span>${HEAD[g.comp]}</span><span>${fx(a, 1)} → ${fx(z, 1)}</span></div>`;
+      }
+      const tag = '';
+      const d = base && base.groups[g.id] != null ? rrDelta(-g.lost, -base.groups[g.id], 1) : '';
+      const items = open ? g.steps.map(s => `<button class="br-row it${s.excluded ? ' off' : ''}" data-item="${esc(s.key)}" title="Open ${esc(s.name)}">
+          <span class="bn">${esc(s.name)}</span><span class="bt">${s.excluded ? '' : seg(s.before, s.after, s.lost < 0 ? 'gain' : 'loss', 'bi-' + s.key)}</span>${s.excluded ? '<span class="bv"><small>excluded</small></span>' : val(s.lost, s.L)}</button>`).join('') : '';
+      return `${head}<div class="br-g${open ? ' open' : ''}"><button class="br-row grp" data-brg="${esc(g.id)}" aria-expanded="${open}">
+          <span class="bn">${tag}${esc(g.name)}${d}</span><span class="bt">${seg(g.before, g.after, gain ? 'gain' : 'loss', 'bg-' + g.id)}</span>${val(g.lost, g.L)}</button>${items}</div>`;
+    }).join('');
+    const srcNote = b.sources.length > 1 ? `<small>${b.sources.map(s => `${s.comp} ${fx(s.gross, 0)}`).join(' + ')}</small>` : '';
+    return `<div class="rr-bridge">
+      <div class="br-row end"><span class="bn">Gross${srcNote}</span><span class="bt">${full(b.gross, 'tot', 'b-gross', b.sources)}</span><span class="bv tot">${rrNum('gross', b.gross, 1)}</span></div>
+      ${rows}
+      <div class="br-row end net"><span class="bn">Net at the meter${base ? rrDelta(b.net, base.net, 1) : ''}</span><span class="bt">${full(b.net, 'tot net', 'b-net')}</span><span class="bv tot">${rrNum('net', b.net, 1)}</span></div>
+    </div>
+    <p class="rr-foot">GWh/yr, ${esc(hzLabel())} average. Total loss <b>${rrNum('lossp', b.lossPct, 1)} %</b>; losses alone carry ±${fx(b.lossSigma, 2)} %. The bars start at ${fx(lo, 0)} GWh/yr so small losses stay visible.${b.implied ? ' Gross is worked back from your P50 and the losses set here.' : ''}</p>`;
+  }
+
+  /* ---------- what drives the uncertainty ---------- */
+  function partOf(it) { const p = Plant.place(it); return p ? p.comp : null; }
+  function rrDrivers() {
+    const list = result.contrib.filter(c => c.variance > 0).sort((a, b) => b.variance - a.variance).slice(0, 6);
+    if (!list.length) return '<p class="rr-foot">No uncertainty set yet.</p>';
+    const max = list[0].share || 1;
+    const gain = {}; result.reduce.forEach(x => { gain[x.key] = x.gainGWh; });
+    return `<div class="rr-drv">${list.map(c => {
+      const it = c.item, t = TIER[it.tier] || TIER.generic, part = partOf(it);
+      const where = (it.comp && it.comp !== 'hybrid' ? COMP_LABEL[it.comp] + ' · ' : '') + (part && Plant.COMPONENTS[part] ? pvName(part) : stageName(it.stage)) + (it.deviceName ? ' · ' + it.deviceName : '');
+      const g = gain[c.key];
+      return `<button class="dv-row" data-item="${esc(c.key)}" title="Open ${esc(it.name)}">
+        <span class="dn">${esc(it.name)}<small>${esc(where)}${g > 0.05 ? ` · halve it: +${fx(g, 1)} GWh/yr at P90` : ''}</small></span>
+        <span class="db"><i class="${t.cls}" data-ak="dv-${esc(c.key)}" style="width:${Math.max(2, c.share / max * 100).toFixed(1)}%"></i></span>
+        <span class="dp">${fx(c.share * 100, 0)} %</span></button>`;
+    }).join('')}</div>`;
+  }
+
+  /* ---------- checks ---------- */
+  function rrChecks() {
+    const list = E.sanity(state, result);
+    if (!list.length) return '';
+    return `<section class="rr-sec"><h4>Check these inputs</h4><div class="rr-checks">${list.map(c => `<button class="ck ${c.level}" ${c.part ? `data-part="${esc(c.part)}"` : 'disabled'}><span class="ci" aria-hidden="true">${c.level === 'warn' ? '!' : 'i'}</span><span>${esc(c.text)}</span></button>`).join('')}</div></section>`;
+  }
+
+  /* ---------- battery: the hourly simulation, kept up to date ---------- */
+  let firmTimer = 0;
+  function firmSchedule() {
+    clearTimeout(firmTimer);
+    if (!hasBess()) return;
+    if (firm.res && firm.key === firmKey() && firm.central) return;
+    firmTimer = setTimeout(firmAuto, 320);
+  }
+  async function firmAuto() {
+    if (!hasBess() || firm.running) { if (firm.running) firmTimer = setTimeout(firmAuto, 400); return; }
+    const key = firmKey();
+    firm.running = true; firm.auto = true;
+    try {
+      const prep = Firm.prepare(state, result, E, Lb);
+      firm.warn = prep.warn;
+      const year = firmYear();
+      firm.central = Firm.central(prep, year); firm.centralKey = key;
+      firmRefresh();
+      await new Promise(r => setTimeout(r, 0));
+      const res = await Firm.run(prep, { n: +state.supply.samples || 400, year }, () => new Promise(r => setTimeout(r, 0)));
+      firm.res = res; firm.drivers = null; firm.key = key; firm.progress = '';
+    } catch (e) { firm.progress = 'The simulation could not run: ' + (e && e.message || e); }
+    finally { firm.running = false; firm.auto = false; firmRefresh(); if (hasBess() && firmKey() !== key) firmSchedule(); }
+  }
+  /* redraw what shows the simulation without touching inputs */
+  function firmRefresh() {
+    $$('[data-live^="firm"]').forEach(el => { const k = el.dataset.live.split('|')[0]; if (LIVE[k]) el.innerHTML = LIVE[k](); });
+    renderRail(); renderSide();
+    if (pvMode()) pvRefresh();
+  }
+  function rrStorage() {
+    if (!hasBess()) return '';
+    const c = firm.central && firm.centralKey === firmKey() ? firm.central : null, r = firm.res, fresh = r && firm.key === firmKey();
+    const b = state.bess, dur = (+b.energyMWh || 0) / Math.max(0.01, +b.powerMW || 0);
+    let body = '<p class="rr-foot">Simulating the plant and battery hour by hour…</p>';
+    if (c) {
+      const g = c.res.gen / 1000, cur = c.res.curtailed / 1000, rt = Math.max(0, c.res.charged - c.res.discharged) / 1000, aux = c.res.auxE / 1000, del = c.res.delivered / 1000;
+      const top = Math.max(g, del), lo = Math.max(0, del - (top - del) * 0.5 - 1e-6), X = v => Math.max(0, Math.min(100, (v - lo) / (top * 1.02 - lo) * 100));
+      let run = g;
+      const step = (name, lost, key) => { const a = run; run -= lost; return lost > 0.005 ? `<div class="br-row"><span class="bn">${name}</span><span class="bt"><i class="store" data-ak="st-${key}" style="left:${X(run).toFixed(2)}%;width:${Math.max(0.8, X(a) - X(run)).toFixed(2)}%"></i></span><span class="bv">−${fx(lost, lost < 10 ? 2 : 1)}<small>${fx(lost / g * 100, 2)} %</small></span></div>` : ''; };
+      const dfr = [['Peak hours', 0], ['Off-peak', 1], ['All hours', 2]].filter(([, i]) => c.res.annual[i] && c.res.annual[i].dfr != null).map(([n, i]) => `<div class="dfr"><span>${n}</span><span class="db"><i data-ak="dfr-${i}" style="width:${(c.res.annual[i].dfr * 100).toFixed(1)}%"></i></span><b>${rrNum('dfr' + i, c.res.annual[i].dfr * 100, 0)} %</b></div>`).join('');
+      body = `<div class="rr-bridge">
+          <div class="br-row end"><span class="bn">Generation</span><span class="bt"><i class="tot" data-ak="st-gen" style="left:0;width:${X(g).toFixed(2)}%"></i></span><span class="bv tot">${rrNum('stgen', g, 1)}</span></div>
+          ${step('Curtailed at the export limit', cur, 'cur')}${step('Battery round trip', rt, 'rt')}${step('Battery auxiliary', aux, 'aux')}
+          <div class="br-row end net"><span class="bn">Delivered</span><span class="bt"><i class="tot net" data-ak="st-del" style="left:0;width:${X(del).toFixed(2)}%"></i></span><span class="bv tot">${rrNum('stdel', del, 1)}</span></div>
+        </div>
+        <h5>Demand met, central year</h5><div class="rr-dfr">${dfr}</div>
+        <div class="rr-meet${fresh ? '' : ' stale'}"><span class="mv">${r ? rrNum('pmeet', r.pMeet * 100, 0) + ' %' : '–'}</span><span class="ml">chance of meeting every supply rule in year ${c.y ? firmYear() : ''}${r ? `<small>${fresh ? r.n.toLocaleString('en') + ' simulated years' : 'updating…'}${r && state.supply.tariff > 0 && fresh ? ' · penalty P90 ' + money(r.penalty.p90) : ''}</small>` : '<small>simulating…</small>'}</span></div>`;
+    }
+    return `<section class="rr-sec"><header><h4>With the battery</h4><span class="rr-meta">${fx(+b.powerMW, 0)} MW · ${fx(+b.energyMWh, 0)} MWh · ${fx(dur, 1)} h</span></header>${body}
+      <div class="rr-acts"><button class="btn small" data-part="bess">Battery</button><button class="btn small" data-part="buyer">Supply contract</button></div></section>`;
+  }
+
+  /* ---------- the rail ---------- */
+  function railHtml() {
+    const r = result, f = r.focus, pv = f.pv, p50 = f.p50;
+    const base = rrBase(), b = E.lossBridge(r, r.focusN);
+    const ratio = p50 > 0 ? pv.P90 / p50 * 100 : 0;
+    const baseBar = base
+      ? `<div class="rr-base on"><span>Against the baseline pinned ${esc(new Date(rr.base.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))}</span><span class="grow"></span><button class="btn small ghost" data-act="rrrevert" title="Put the baseline inputs back">Revert</button><button class="btn small ghost" data-act="rrclear">Clear</button></div>`
+      : `<div class="rr-base"><span>Pin these results, then change inputs to see the difference.</span><span class="grow"></span><button class="btn small" data-act="rrpin">Pin baseline</button></div>`;
+    return `<div class="rr" id="rr">
+      <div class="rr-top"><h3>Results</h3><span class="rr-meta">live · ${esc(hzLabel())} average</span><span class="grow"></span><button class="btn small ghost rr-close" data-act="rrsheet" aria-label="Close results">Close</button></div>
+      ${hzButtons()}
+      <div class="rr-kpis">
+        <div class="kpi key"><span class="l">P90</span><span class="v">${rrNum('p90', pv.P90, 1)}<small>GWh/yr</small></span><span class="s">${base ? rrDelta(pv.P90, base.p90, 1, { same: true }) : 'exceeded 9 years in 10'}</span></div>
+        <div class="kpi"><span class="l">P50${hasSolar() && r.focusN > 1 ? ', ' + esc(hzLabel()) : ''}</span><span class="v">${rrNum('p50', p50, 1)}<small>GWh/yr</small></span><span class="s">CUF ${fx(r.focusN === 1 || !hasSolar() ? r.en.cf * 100 : p50 * 1000 / (r.model.ctx.capacityMW * 8760) * 100, 1)} %${base ? ' ' + rrDelta(p50, base.p50, 1) : ''}</span></div>
+        <div class="kpi"><span class="l">P90 / P50</span><span class="v">${rrNum('ratio', ratio, 1)}<small>%</small></span><span class="s">${base ? rrDelta(ratio, base.ratio, 1, { unit: ' pts', same: true }) : 'how far P90 sits below P50'}</span></div>
+        <div class="kpi"><span class="l">Uncertainty σ</span><span class="v">${rrNum('sigma', f.sigma, 2, { pre: '±', goodUp: false })}<small>%</small></span><span class="s">${base ? rrDelta(f.sigma, base.sigma, 2, { goodUp: false, unit: ' pts', same: true }) : 'one standard deviation'}</span></div>
+      </div>
+      ${baseBar}
+      <section class="rr-sec"><header><h4>Range of outcomes</h4><span class="rr-meta">${base ? 'dashed: baseline' : 'hover for the odds'}</span></header>${rrCurve(base)}${rrLevels(base)}</section>
+      <section class="rr-sec"><header><h4>Gross to net</h4><button class="btn small ghost" data-act="rrall" aria-pressed="${rr.all}">${rr.all ? 'Groups' : 'Every loss'}</button></header>${rrBridge(b, base)}</section>
+      ${rrStorage()}
+      <section class="rr-sec"><header><h4>What drives the uncertainty</h4><span class="rr-meta">share of variance</span></header>${rrDrivers()}
+        <div class="rr-ev">${mixBar(r.mix)}${legend()}${r.none.length ? `<p class="rr-foot">${r.none.length} item${r.none.length > 1 ? 's' : ''} excluded.</p>` : ''}</div></section>
+      ${rrChecks()}
+      <div class="rr-acts end"><button class="btn primary" data-stage="results">Full report</button><button class="btn" data-act="export">Export</button></div>
+      <p class="rr-foot">P-values assume a normal distribution of the combined uncertainty. The full report adds a Monte Carlo check, the loss table and the register.</p>
+    </div>`;
+  }
+
+  /* open an item where it lives: its plant part in the plant view, its stage in the step view */
+  function openItem(key) {
+    const it = itemMap()[key]; if (!it) return;
+    closeSheet();
+    if (pvMode()) {
+      const pl = Plant.place(it);
+      if (pl) {
+        if (isHybrid()) { const fm = farmOf(pl.comp); if (fm) pv.view = fm; else if (!pvOrder().includes(pl.comp)) pv.view = 'site'; }
+        pv.sel = pl.comp; pv.open = new Set([pl.group]); pv.hot = pl.group; savePv(); renderPlant(true);
+        const card = document.getElementById('it-' + key), ins = $('#pvInsp');
+        if (card && ins) { const fixed = getComputedStyle(ins).overflowY !== 'visible' && ins.scrollHeight > ins.clientHeight + 4; if (fixed) ins.scrollTop += card.getBoundingClientRect().top - ins.getBoundingClientRect().top - 60; else card.scrollIntoView({ block: 'center' }); card.classList.add('flash'); }
+        return;
+      }
+    }
+    const sid = isHybrid() ? it.stage : it.def.stage;
+    if (pvMode()) { pv.mode = 'steps'; savePv(); $$('.vt button').forEach(bn => bn.setAttribute('aria-pressed', String(bn.dataset.val === 'steps'))); }
+    go(chainOf().includes(it.stage) ? it.stage : sid);
+    const card = document.getElementById('it-' + key);
+    if (card) { card.scrollIntoView({ block: 'center' }); card.classList.add('flash'); }
+  }
+  function openPart(id) {
+    closeSheet();
+    if (id === 'buyer' && !pvMode()) { go('supply'); return; }
+    if (id === 'bess' && !pvMode()) { go('bess'); return; }
+    if (!pvMode()) { pv.mode = 'plant'; $$('.vt button').forEach(bn => bn.setAttribute('aria-pressed', String(bn.dataset.val === 'plant'))); }
+    if (isHybrid()) { const fm = farmOf(id); if (fm) pv.view = fm; else if (id === 'bess' || id === 'buyer' || id === 'link') pv.view = 'site'; }
+    pv.sel = id; pv.open.clear(); pv.hot = null; savePv();
+    recompute(); renderStage(true); updateChrome();
+    const ins = $('#pvInsp'); if (ins) ins.scrollTop = 0;
+  }
+  function closeSheet() { if (rr.sheet) { rr.sheet = false; document.body.classList.remove('rr-open'); } }
+  function toggleSheet() { rr.sheet = !rr.sheet; document.body.classList.toggle('rr-open', rr.sheet); }
+
+  /* rail buttons; returns true when the click was handled */
+  function rrClick(e) {
+    const it = e.target.closest('[data-item]');
+    if (it) { e.preventDefault(); openItem(it.dataset.item); return true; }
+    const g = e.target.closest('[data-brg]');
+    if (g) { const id = g.dataset.brg; if (rr.open.has(id)) rr.open.delete(id); else rr.open.add(id); renderSide(); return true; }
+    const p = e.target.closest('[data-part]');
+    if (p) { e.preventDefault(); openPart(p.dataset.part); return true; }
+    const a = e.target.closest('[data-act]');
+    if (!a) return false;
+    switch (a.dataset.act) {
+      case 'rrpin': pinBase(); return true;
+      case 'rrclear': clearBase(); return true;
+      case 'rrrevert': revertBase(); return true;
+      case 'rrall': rr.all = !rr.all; renderSide(); return true;
+      case 'rrsheet': toggleSheet(); return true;
+      default: return false;
+    }
+  }
+  /* hover on the odds curve: energy at the pointer and how often it is exceeded */
+  function rrPointer(e) {
+    const h = e.target.closest && e.target.closest('[data-odds]');
+    if (!h) { const c = $('#rrCur'); if (c) c.classList.remove('on'); return false; }
+    const d = h.dataset, rect = h.ownerSVGElement.getBoundingClientRect(), W = +d.w, ml = +d.ml, mr = +d.mr;
+    const sx = Math.max(ml, Math.min(W - mr, (e.clientX - rect.left) / rect.width * W));
+    const v = +d.lo + (sx - ml) / (W - ml - mr) * (+d.hi - +d.lo), pex = 1 - ncdf((v - +d.p50) / +d.sd);
+    const c = $('#rrCur'); if (c) { c.setAttribute('x1', sx); c.setAttribute('x2', sx); c.classList.add('on'); }
+    showTip(`<b>${fx(v, 1)} GWh/yr</b> or more in ${pex > 0.995 ? 'over 99' : pex < 0.005 ? 'under 1' : fx(pex * 100, 0)} % of ${result.focusN === 1 ? 'years' : esc(hzLabel()) + ' periods'}`, e.clientX, e.clientY);
+    return true;
+  }
+
+  /* ---------- loss table for the full report ---------- */
+  function lossTable() {
+    const b = E.lossBridge(result, result.focusN);
+    const rows = b.groups.map(g => `<tr class="grp"><td class="txt">${g.comp && g.comp !== 'hybrid' ? esc(COMP_LABEL[g.comp]) + ' · ' : ''}${esc(g.name)}</td><td></td><td>${fx(g.L, 2)}</td><td></td><td>${g.lost < 0 ? '+' : '−'}${fx(Math.abs(g.lost), 2)}</td><td>${fx(g.after, 1)}</td></tr>` +
+      g.steps.map(s => `<tr${s.excluded ? ' class="off"' : ''}><td class="txt sub">${esc(s.name)}</td><td class="txt">${esc(TIER[s.tier] ? TIER[s.tier].label : '')}</td><td>${s.excluded ? '–' : fx(s.L, 2)}${s.rate != null && !s.excluded ? `<br><span class="computed">${fx(s.rate, 2)} %/yr</span>` : ''}</td><td>${s.excluded ? '–' : '±' + fx(s.s, 2)}${s.iav > 0 ? `<br><span class="computed">yearly ±${fx(s.iav, 1)}</span>` : ''}</td><td>${s.excluded ? '–' : (s.lost < 0 ? '+' : '−') + fx(Math.abs(s.lost), 2)}</td><td>${fx(s.after, 1)}</td></tr>`).join('')).join('');
+    const src = b.sources.map(s => `<tr class="hl"><td class="txt">${esc(s.name)}</td><td></td><td></td><td></td><td></td><td>${fx(s.gross, 1)}</td></tr>`).join('');
+    return `<div class="tblwrap" style="max-height:560px"><table class="t loss"><thead><tr><th>Loss</th><th>Evidence</th><th>Loss, %</th><th>σ, pts</th><th>GWh/yr</th><th>GWh/yr left</th></tr></thead><tbody>${src}${rows}
+      <tr class="hl"><td class="txt">Net at the meter, ${esc(hzLabel())} average</td><td></td><td>${fx(b.lossPct, 2)}</td><td>±${fx(b.lossSigma, 2)}</td><td>−${fx(b.gross - b.net, 2)}</td><td>${fx(b.net, 1)}</td></tr></tbody></table></div>
+      <p class="formula">Each loss is a share of the energy left after the ones above it: net = gross × Π(1 − loss). The order changes each step's GWh, not the total. ±${fx(b.lossSigma, 2)} % is the uncertainty from losses alone, as if the gross energy were known exactly.${b.implied ? ' Gross is worked back from the P50 you entered.' : ''}</p>`;
+  }
+  function lossCsv() {
+    const b = E.lossBridge(result, result.focusN), q = s => '"' + String(s).replace(/"/g, '""') + '"';
+    const lines = [['Plant', 'Group', 'Loss', 'Evidence', 'Loss %', 'Sigma pts', 'Yearly variability pts', 'GWh/yr lost', 'GWh/yr left'].join(',')];
+    b.sources.forEach(s => lines.push([q(s.comp || ''), q(s.name), '', '', '', '', '', '', s.gross.toFixed(3)].join(',')));
+    b.steps.forEach(s => lines.push([q(s.comp || ''), q(s.groupName), q(s.name), q(TIER[s.tier] ? TIER[s.tier].label : ''), s.L.toFixed(3), s.s.toFixed(3), s.iav.toFixed(3), s.lost.toFixed(3), s.after.toFixed(3)].join(',')));
+    lines.push(['', q('Net at the meter'), '', '', b.lossPct.toFixed(3), b.lossSigma.toFixed(3), '', (b.gross - b.net).toFixed(3), b.net.toFixed(3)].join(','));
+    offerFile(slug(state.meta.name) + '.losses.csv', new Blob([lines.join('\r\n')], { type: 'text/csv' }));
+  }
+  LIVE.firmres = () => (firm.res ? `${firm.key !== firmKey() ? '<p class="warn">Inputs changed since this run. It is being simulated again.</p>' : ''}${firmResults()}` : '<p class="note">Simulating the plant and battery…</p>');
+  LIVE.firmctl = () => { const busy = firm.running && !firm.auto; return `<button class="btn primary" data-act="firmrun" ${busy ? 'disabled' : ''}>${busy ? 'Running…' : firm.res ? 'Run again' : 'Run simulation'}</button>
+          <button class="btn" data-act="firmdrivers" ${busy || !firm.res ? 'disabled' : ''}>Find what drives the risk</button>`; };
 
 
   /* ---------- events ---------- */
@@ -4807,6 +5446,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     }
   }
   function onClick(e) {
+    if (e.target.closest && rrClick(e)) return;
     if (pvMode() && e.target.closest && e.target.closest('#sheet')) {
       const pc = e.target.closest('[data-pc]');
       if (pc) { e.preventDefault(); pvSelect(pc.dataset.pc); return; }
@@ -4815,13 +5455,19 @@ if (typeof module !== 'undefined') module.exports = Plant;
     }
     const t = e.target.closest('button, [data-stage]');
     if (!t) return;
-    if (t.dataset.stage) { e.preventDefault(); closeOverlay(); if (pvMode()) { pv.mode = 'steps'; savePv(); $$('.vt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.val === 'steps'))); } go(t.dataset.stage); return; }
+    if (t.dataset.stage) { e.preventDefault(); closeOverlay(); closeSheet(); if (pvMode()) { pv.mode = 'steps'; savePv(); $$('.vt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.val === 'steps'))); } go(t.dataset.stage); return; }
     if (t.dataset.hz) {
       state.view.horizon = t.dataset.hz === 'life' ? 'life' : +t.dataset.hz; saveLocal();
       recompute(); renderStage(true); updateChrome(); return;
     }
     if (t.dataset.set) {
       const v = t.dataset.type === 'num' ? +t.dataset.val : t.dataset.type === 'bool' ? t.dataset.val === 'true' : t.dataset.val;
+      const pm = /^(energy|energyPv)\.p50Mode$/.exec(t.dataset.set);
+      if (pm) { // start a new basis from the value in use, so the results do not jump
+        const en = isHybrid() ? result[pm[1] === 'energyPv' ? 'solar' : 'wind'].en : result.en, o = state[pm[1]] = state[pm[1]] || {};
+        if (v === 'gross' && !(+o.gross > 0)) o.gross = +en.grossGWh.toFixed(1);
+        if (v === 'entered' && !(+o.p50 > 0)) o.p50 = +en.p50.toFixed(1);
+      }
       setPath(state, t.dataset.set, v);
       if (t.dataset.set === 'supply.preset') applyPreset();
       touch();
@@ -4866,6 +5512,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     if (act === 'replaceyes') { replaceProject(t.dataset.kind); return; }
     if (act === 'xlsx') { exportXlsx(); return; }
     if (act === 'json') { exportJson(); return; }
+    if (act === 'losscsv') { lossCsv(); return; }
   }
 
   /* tooltips and the power curve crosshair */
@@ -4881,6 +5528,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
   }
   function hideTip() { if (tipEl) tipEl.hidden = true; const d = $('#pcDot'); if (d) d.classList.remove('on'); }
   function onPointer(e) {
+    if (rrPointer(e)) return;
     const c = e.target.closest && e.target.closest('[data-curve]');
     if (c) {
       const svg = c.ownerSVGElement, rect = svg.getBoundingClientRect();
@@ -5062,6 +5710,16 @@ if (typeof module !== 'undefined') module.exports = Plant;
       reg.push([COMP_LABEL[it.comp] || (isSolar() ? 'Solar' : 'Wind'), stageOrderName(it.stage), it.name, it.deviceName || '', it.cat, it.sub, E.IEC_BASIS[it.mode], TIER[it.tier].label, it.domain === 'ws' ? 'wind speed' : it.domain === 'res' ? 'irradiance' : it.domain === 'en' ? 'energy' : 'loss', it.domain === 'loss' ? +it.L.toFixed(3) : '', +it.sigma.toFixed(4), it.iav ? +it.iav.toFixed(3) : '', +ens.toFixed(4), contrib[it.key] ? +(contrib[it.key].share * 100).toFixed(2) : '', (it.def.src || []).map(k => Lb.SOURCES[k] && Lb.SOURCES[k].t).filter(Boolean).join('; ')]);
     });
     X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(reg), 'Register');
+    // gross to net at the period on screen: every loss, the energy it takes and what is left
+    {
+      const b = E.lossBridge(r, r.focusN);
+      const rows = [['Gross to net, ' + hzLabel() + ' average (GWh/yr)'], ['Plant', 'Group', 'Loss', 'Evidence', 'Loss (%)', 'σ (pts)', 'Yearly variability (pts)', 'Energy lost (GWh/yr)', 'Energy left (GWh/yr)']];
+      b.sources.forEach(x => rows.push([COMP_LABEL[x.comp] || '', x.name, '', '', '', '', '', '', +x.gross.toFixed(3)]));
+      b.steps.forEach(x => rows.push([COMP_LABEL[x.comp] || '', x.groupName, x.name, TIER[x.tier] ? TIER[x.tier].label : '', +x.L.toFixed(3), +x.s.toFixed(3), +x.iav.toFixed(3), +x.lost.toFixed(3), +x.after.toFixed(3)]));
+      rows.push(['', 'Net at the meter', '', '', +b.lossPct.toFixed(3), +b.lossSigma.toFixed(3), '', +(b.gross - b.net).toFixed(3), +b.net.toFixed(3)]);
+      if (b.implied) rows.push([], ['Gross is worked back from the entered P50 and the losses.']);
+      X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(rows), 'Gross to net');
+    }
     // the plant view's breakdown: each part and category, its energy σ and share of the total
     {
       const sm = Plant.summarise(state, r, E, Lb), hyb = isHybrid();
@@ -5283,7 +5941,7 @@ if (typeof module !== 'undefined') module.exports = Plant;
     document.addEventListener('click', onClick);
     document.addEventListener('pointermove', onPointer);
     document.addEventListener('pointerleave', hideTip);
-    document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (overlay) { closeOverlay(); return; } if (pvMode() && pv.sel) { pv.sel = null; pv.hot = null; pv.open.clear(); pv.full = false; savePv(); renderPlant(true); } });
+    document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (overlay) { closeOverlay(); return; } if (rr.sheet) { closeSheet(); return; } if (pvMode() && pv.sel) { pv.sel = null; pv.hot = null; pv.open.clear(); pv.full = false; savePv(); renderPlant(true); } });
     initCaps();
   }
   start();

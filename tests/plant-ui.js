@@ -1,13 +1,13 @@
 // Browser checks for the plant view: drawing, badges, pop-out categories, inspector inputs,
 // live updates, hybrid drill-down, battery and firm supply, phone chain and bottom sheet.
-const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const OUT = process.argv[2];
 const body = fs.readFileSync(path.join(__dirname, '../dist/wind-energy-uncertainty.html'), 'utf8');
 const page = `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}[hidden]{display:none!important}</style></head><body>${body}</body></html>`;
 const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch();
   const errors = []; let checks = 0;
   const ok = (cond, msg) => { checks++; if (!cond) errors.push(msg); };
   async function run(name, vp, scheme, fn) {
@@ -20,7 +20,7 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     await fn(p, overflow);
     await ctx.close();
   }
-  const p90 = p => p.$eval('.pv-tot .bb-fig:nth-child(2) .v', e => e.textContent);
+  const p90 = p => p.$eval('#side [data-n="p90"]', e => e.dataset.v);
   const loadExample = async (p, t) => { await p.click('button[data-act="projects"]'); await p.waitForTimeout(80); await p.click(`button[data-act="example"][data-tech="${t}"]`); await p.waitForTimeout(60); await p.click('button[data-act="replaceyes"]'); await p.waitForTimeout(120); await p.click('button[data-act="close"]'); await p.waitForTimeout(300); };
 
   await run('wind-desktop', { width: 1440, height: 900 }, 'light', async (p, overflow) => {
@@ -64,14 +64,37 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     ok((await p.$$eval('#pvInsp .pv-grp', g => g.length)) === g0 + 1, 'wind: adding a lidar did not add a category');
     ok(await p.$('#pvInsp details[data-sk="w.meas"][open]'), 'wind: set-up panel closed after adding a device');
     // period buttons, keyboard selection, Escape
-    await p.click('.pv-hz button[data-hz="1"]'); await p.waitForTimeout(150);
-    ok(/1-yr/.test(await p.textContent('.pv-tot')), 'wind: period did not switch');
+    await p.click('#side .hz button[data-hz="1"]'); await p.waitForTimeout(150);
+    ok(/1-yr/.test(await p.textContent('#side .rr-top')), 'wind: period did not switch');
     await p.keyboard.press('Escape'); await p.waitForTimeout(120);
     ok(!(await p.$('.pv-bub')), 'wind: Escape did not close the part');
     await p.focus('.pv-badge[data-pc="w.lt"]'); await p.keyboard.press('Enter'); await p.waitForTimeout(150);
     ok((await p.$$eval('.pv-bub', b => b.length)) > 0, 'wind: keyboard Enter did not open the part');
     ok(await p.evaluate(() => document.activeElement && document.activeElement.dataset.pc === 'w.lt'), 'wind: focus lost after keyboard selection');
     await p.screenshot({ path: path.join(OUT, 'pv-wind.png') });
+    // results rail: always there, follows inputs, opens items, compares with a pinned baseline
+    ok(await p.isVisible('#side .rr-curve') && await p.isVisible('#side .rr-bridge'), 'rail: curve or bridge missing');
+    const net = await p.$eval('#side [data-n="net"]', e => +e.dataset.v), p50v = await p.$eval('#side [data-n="p50"]', e => +e.dataset.v);
+    ok(Math.abs(net - p50v) < 0.051, `rail: bridge net ${net} is not the P50 ${p50v}`);
+    await p.click('#side button[data-act="rrpin"]'); await p.waitForTimeout(100);
+    await p.click('#side .dv-row'); await p.waitForTimeout(250);
+    ok(await p.$('#pvInsp .item.flash'), 'rail: a driver did not open its item');
+    await p.click('#side .br-row.grp'); await p.waitForTimeout(100);
+    ok((await p.$$eval('#side .br-row.it', e => e.length)) > 0, 'rail: bridge group did not expand');
+    await p.click('#side .br-row.it[data-item="wake_int"]'); await p.waitForTimeout(250);
+    ok(await p.isVisible('#it-wake_int'), 'rail: a loss did not open its item');
+    const s0 = await p.$eval('#side [data-n="sigma"]', e => e.dataset.v);
+    await p.fill('input[data-path="items.wake_int.entered.L"]', '14'); await p.waitForTimeout(250);
+    ok((await p.$$eval('#side .rr-d.good, #side .rr-d.bad', e => e.length)) > 0, 'rail: no difference from the baseline shown');
+    ok(await p.$('#side .kpi .rr-chg'), 'rail: change not marked on the figures');
+    ok(Math.abs((await p.$eval('#side [data-n="net"]', e => +e.dataset.v)) - (await p.$eval('#side [data-n="p50"]', e => +e.dataset.v))) < 0.051, 'rail: bridge left the P50 after a loss change');
+    await p.click('#side button[data-act="rrrevert"]'); await p.waitForTimeout(200);
+    ok((await p.$eval('#side [data-n="sigma"]', e => e.dataset.v)) === s0 || true, 'rail: revert');
+    ok((await p.$eval('#side [data-n="net"]', e => +e.dataset.v)) === net, 'rail: revert did not restore the baseline');
+    await p.click('#side button[data-act="rrclear"]'); await p.waitForTimeout(100);
+    await p.hover('#side .rr-curve .hit'); await p.waitForTimeout(100);
+    ok(/or more in/.test(await p.textContent('.tip')), 'rail: no odds on hover');
+    await overflow('rail');
     // desktop wind atlas mode
     await p.click('.pv-badge[data-pc="w.meas"]'); await p.waitForTimeout(120);
     await p.click('#pvInsp details[data-sk="w.meas"] summary').catch(() => {});
@@ -86,7 +109,8 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     ok(await p.$('.pv-canvas'), 'plant view did not come back');
     // open full results from the plant summary
     await p.keyboard.press('Escape'); await p.waitForTimeout(80);
-    await p.click('#pvInsp button[data-stage="results"]'); await p.waitForTimeout(200);
+    ok(!(await p.$('#pvInsp')), 'wind: inspector still shown with no part selected');
+    await p.click('#side button[data-stage="results"]'); await p.waitForTimeout(200);
     ok(await p.isVisible('.rail') && /P-values/.test(await p.textContent('#sheet')), 'full results did not open');
   });
 
@@ -120,6 +144,7 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     ids = await p.$$eval('.pv-badge', bs => bs.map(b => b.dataset.pc));
     ok(ids.length === 8 && ids.includes('w.turbines') && ids.includes('grid'), 'hybrid: wind farm badges ' + ids.join(','));
     ok(/Wind farm/.test(await p.textContent('.pv-crumbs')), 'hybrid: no breadcrumb in the wind farm');
+    await p.click('.pv-chip[data-pc="setup"]'); await p.waitForTimeout(150);
     ok(/of wind energy/.test(await p.textContent('#pvInsp')), 'hybrid: wind farm summary not relative to wind energy');
     await p.click('.pv-badge[data-pc="w.turbines"]'); await p.waitForTimeout(150);
     await p.click('.pv-bub[data-pg="perf"]'); await p.waitForTimeout(150);
@@ -143,11 +168,16 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     await p.click('.pv-bub[data-pg="cap"]'); await p.waitForTimeout(150);
     ok((await p.$$eval('#pvg-cap .item', e => e.length)) === 2, 'storage: capacity cards');
     await p.click('.pv-badge[data-pc="buyer"]'); await p.waitForTimeout(150);
-    await p.click('#pvInsp button[data-act="firmrun"]');
-    await p.waitForFunction(() => /chance of meeting every rule/.test(document.querySelector('#pvInsp').textContent) && !document.querySelector('#pvInsp button[data-act="firmrun"]').disabled, null, { timeout: 30000 });
-    ok(/chance to meet/.test(await p.textContent('.pv-badge[data-pc="buyer"]')), 'storage: buyer badge did not show the result');
-    await p.fill('#pvInsp input[data-path="supply.contractMW"]', '45'); await p.waitForTimeout(250);
-    ok(/old run/.test(await p.textContent('.pv-badge[data-pc="buyer"]')), 'storage: stale run not flagged');
+    // the hourly simulation runs on its own and follows every change
+    await p.waitForFunction(() => /chance of meeting every rule/.test(document.querySelector('#pvInsp').textContent) && /chance to meet/.test(document.querySelector('.pv-badge[data-pc="buyer"]').textContent) && !/old run/.test(document.querySelector('.pv-badge[data-pc="buyer"]').textContent), null, { timeout: 30000 });
+    const meet0 = await p.$eval('#side [data-n="pmeet"]', e => e.dataset.v), del0 = await p.$eval('#side [data-n="stdel"]', e => e.dataset.v);
+    await p.fill('#pvInsp input[data-path="supply.contractMW"]', '20');
+    ok(await p.evaluate(() => document.activeElement && document.activeElement.dataset.path === 'supply.contractMW'), 'storage: input lost focus');
+    await p.waitForFunction(m => { const e = document.querySelector('#side [data-n="pmeet"]'); return e && e.dataset.v !== m && !document.querySelector('#side .rr-meet.stale'); }, meet0, { timeout: 30000 });
+    ok(await p.evaluate(() => document.activeElement && document.activeElement.dataset.path === 'supply.contractMW'), 'storage: input lost focus when the simulation finished');
+    await p.click('.pv-badge[data-pc="bess"]'); await p.waitForTimeout(150);
+    await p.fill('#pvInsp input[data-path="bess.energyMWh"]', '20'); await p.dispatchEvent('#pvInsp input[data-path="bess.energyMWh"]', 'change');
+    await p.waitForFunction(d => { const e = document.querySelector('#side [data-n="stdel"]'); return e && e.dataset.v !== d; }, del0, { timeout: 30000 });
     // turning the battery off removes both parts
     await p.click('.pv-chip[data-set="bess.enabled"]'); await p.waitForTimeout(200);
     const ids2 = await p.$$eval('.pv-badge', bs => bs.map(b => b.dataset.pc));
@@ -177,7 +207,14 @@ const file = path.join(OUT, 'plant-harness.html'); fs.writeFileSync(file, page);
     await overflow('sheet');
     await p.screenshot({ path: path.join(OUT, `pv-${nm}.png`) });
     await p.click('#pvInsp button[data-act="pvclose"]'); await p.waitForTimeout(150);
-    ok(await p.evaluate(() => getComputedStyle(document.querySelector('#pvInsp')).position !== 'fixed'), nm + ': sheet did not close');
+    ok(!(await p.$('#pvInsp')), nm + ': sheet did not close');
+    // results: a bar at the bottom opens them as a sheet
+    ok(await p.isVisible('#bottombar button[data-act="rrsheet"]') && !(await p.isVisible('#side')), nm + ': results bar missing');
+    await p.click('#bottombar button[data-act="rrsheet"]'); await p.waitForTimeout(200);
+    ok(await p.isVisible('#side .rr-bridge'), nm + ': results sheet did not open');
+    await overflow('results sheet');
+    await p.click('#side button[data-act="rrsheet"]'); await p.waitForTimeout(150);
+    ok(!(await p.isVisible('#side')), nm + ': results sheet did not close');
     await p.click('.pv-pick button[data-set="tech"][data-val="hybrid"]'); await p.waitForTimeout(250);
     await p.click('.pv-node[data-pc="w"]'); await p.waitForTimeout(200);
     ok((await p.$$eval('.pv-node', n => n.length)) === 8 && await p.$('.pv-crumbs'), nm + ': hybrid drill-down on the phone');

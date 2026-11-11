@@ -227,4 +227,64 @@ r.reduce.slice(0, 5).forEach(x => console.log('  +' + x.gainGWh.toFixed(2), 'GWh
 console.log('\nStage σ (energy %):', Object.entries(r.stages).map(([k, s]) => k + ' ' + s.sigma.toFixed(2)).join(', '));
 console.log('Mix:', Object.entries(r.mix).map(([k, v]) => k + ' ' + (v * 100).toFixed(0) + '%').join(', '));
 console.log('P-values 10y:', Object.entries(r.H[10].pv).map(([k, v]) => k + ' ' + v.toFixed(1)).join(', '));
+
+/* ---------- gross to net ---------- */
+t('loss bridge lands on the P50 at every period: wind, solar, hybrid', () => {
+  [L.exampleProject(), L.solarExampleProject(), L.hybridExampleProject()].forEach(p => {
+    const r = E.evaluate(p, L);
+    [1, 10, r.model.ctx.life].forEach(N => {
+      const b = E.lossBridge(r, N);
+      near(b.net, r.H[N].p50, 1e-9, `${p.tech} ${N}-yr net`);
+      near(b.steps.reduce((a, s) => a + s.lost, 0), b.gross - b.net, 1e-9, 'steps add up to gross − net');
+      near(b.groups.reduce((a, g) => a + g.lost, 0), b.gross - b.net, 1e-9, 'groups add up');
+      near(b.steps[b.steps.length - 1].after, b.net, 1e-9, 'last step leaves the net');
+    });
+  });
+});
+t('loss bridge: a hybrid has two gross streams and the shared losses act on their sum', () => {
+  const r = E.evaluate(L.hybridExampleProject(), L), b = E.lossBridge(r, 1);
+  assert.strictEqual(b.sources.length, 2);
+  near(b.gross, r.wind.en.grossGWh + r.solar.en.grossGWh, 1e-9);
+  const shared = b.steps.filter(s => s.comp === 'hybrid');
+  assert.ok(shared.length >= 3, 'shared connection losses present');
+  near(shared[0].streamBefore, r.wind.en.p50 + r.solar.en.p50, 1e-9, 'shared losses start from wind + solar');
+  assert.ok(!b.steps.some(s => s.comp !== 'hybrid' && s.id === 'av_grid'), 'grid availability counted once');
+});
+t('loss bridge: an entered P50 gives the gross the losses imply', () => {
+  const p = L.exampleProject(); p.energy.p50Mode = 'entered'; p.energy.p50 = 250;
+  const r = E.evaluate(p, L), b = E.lossBridge(r, 1);
+  assert.strictEqual(b.implied, true);
+  near(b.net, 250, 1e-9); near(b.gross, 250 / r.en.eff, 1e-9);
+});
+t('gross energy as the basis: P50 = gross × efficiency, for wind and solar', () => {
+  const w = L.exampleProject(); w.energy.p50Mode = 'gross'; w.energy.gross = 400;
+  const rw = E.evaluate(w, L);
+  assert.strictEqual(rw.en.p50Source, 'gross'); near(rw.en.p50, 400 * rw.en.eff, 1e-9); near(E.lossBridge(rw, 1).gross, 400, 1e-12);
+  assert.ok(rw.en.grossTool > 0 && rw.en.grossTool !== 400, 'tool estimate kept for comparison');
+  const s = L.solarExampleProject(); s.energy.p50Mode = 'gross'; s.energy.gross = 500;
+  const rs = E.evaluate(s, L); near(rs.en.p50, 500 * rs.en.eff, 1e-9);
+  const z = L.exampleProject(); z.energy.p50Mode = 'gross'; z.energy.gross = 0;
+  assert.strictEqual(E.evaluate(z, L).en.p50Source, 'computed', 'no gross entered falls back to the tool estimate');
+});
+t('loss-only uncertainty is the loss part of the total', () => {
+  const r = E.evaluate(L.exampleProject(), L), b = E.lossBridge(r, 10), tm = r.H[10].comb.terms;
+  near(b.lossSigma, Math.sqrt(tm.loss2 + tm.lossIav2), 1e-9);
+});
+t('clipping from the DC/AC ratio rises smoothly and is not capped at 4 %', () => {
+  const clip = r => { const p = L.solarExampleProject(); p.pv.dcMWp = 100 * r; p.pv.acMW = 100; p.items.clipping = { mode: 'desc', choice: 0 }; return E.evaluate(p, L).model.items.find(i => i.id === 'clipping'); };
+  near(clip(1.3).L, 1.0, 1e-9); near(clip(1.2).L, 0.3, 1e-9);
+  let last = -1; [1.0, 1.1, 1.25, 1.36, 1.5, 1.8, 2.2, 2.8].forEach(r => { const L1 = clip(r).L; assert.ok(L1 >= last, 'monotonic at ' + r); last = L1; });
+  assert.ok(clip(2.0).L > 10, 'DC/AC 2.0 clips well over 4 %');
+  assert.ok(clip(2.0).sigma < 0.5 * clip(2.0).L, 'uncertainty grows slower than the loss at high ratios');
+});
+t('plausibility checks flag impossible inputs and stay quiet on the examples', () => {
+  [L.exampleProject(), L.solarExampleProject(), L.hybridExampleProject()].forEach(p => assert.deepStrictEqual(E.sanity(p, E.evaluate(p, L)), [], p.tech + ' example'));
+  const w = L.exampleProject(); w.energy.p50Mode = 'gross'; w.energy.gross = 2000;
+  assert.ok(E.sanity(w, E.evaluate(w, L)).some(c => c.id === 'grosscf' && c.level === 'warn' && c.part === 'w.turbines'));
+  const s = L.solarExampleProject(); s.pv.mount = 'tracker'; s.pv.poaRatio = 1.05;
+  assert.ok(E.sanity(s, E.evaluate(s, L)).some(c => c.id === 'poa'));
+  const c = L.solarExampleProject(); c.pv.acMW = c.pv.dcMWp / 1.9; c.items.clipping = { mode: 'entered', entered: { L: 1, s: 0.5, iav: 0 } };
+  assert.ok(E.sanity(c, E.evaluate(c, L)).some(x => x.id === 'clip'));
+});
+
 console.log(`\n${pass} passed`);

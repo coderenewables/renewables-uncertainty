@@ -17,7 +17,8 @@
   const pvView = () => (isHybrid() ? (pv.view === 'wind' || pv.view === 'solar' ? pv.view : 'site') : ptech());
   const pvOrder = () => { const v = pvView(); const o = Plant.orderFor(state, v); return o; };
   const farmOf = id => (!id ? null : id === 'w' || id.startsWith('w.') ? 'wind' : id === 's' || id.startsWith('s.') ? 'solar' : null);
-  const pvComp = () => (isHybrid() ? (pv.sel ? farmOf(pv.sel) : pvView() === 'site' ? null : pvView()) : null);
+  const pvPart = () => (pv.sel && pv.sel !== 'setup' ? pv.sel : null);   // the selected plant part; 'setup' is the project panel
+  const pvComp = () => (isHybrid() ? (pvPart() ? farmOf(pv.sel) : pvView() === 'site' ? null : pvView()) : null);
   const isDesk = () => ptech() !== 'solar' && state.setup.dataSource === 'desktop';
   function pvName(id) {
     const m = PC[id]; if (!m) return id;
@@ -31,7 +32,7 @@
   function pvNormalise() {
     if (!isHybrid()) pv.view = null; else if (!['site', 'wind', 'solar'].includes(pv.view)) pv.view = 'site';
     const ok = pvOrder();
-    if (pv.sel && !ok.includes(pv.sel)) pv.sel = null;
+    if (pv.sel && pv.sel !== 'setup' && !ok.includes(pv.sel)) pv.sel = null;
     if (!pv.sel) pv.open.clear();
   }
   function pvSummarise() { pv.sum = Plant.summarise(state, result, E, Lb); return pv.sum; }
@@ -299,7 +300,8 @@
     const t = ptech();
     return `<div class="pv-bar">
       <div class="pv-pick"><div class="seg" role="group" aria-label="Plant type">${[['wind', 'Wind'], ['solar', 'Solar PV'], ['hybrid', 'Hybrid']].map(([k, l]) => `<button data-set="tech" data-val="${k}" aria-pressed="${t === k}">${l}</button>`).join('')}</div>
-        <button class="pv-chip" data-set="bess.enabled" data-type="bool" data-val="${!hasBess()}" aria-pressed="${hasBess()}">${hasBess() ? '<span aria-hidden="true">✓</span> Battery' : '+ Battery'}</button></div>
+        <button class="pv-chip" data-set="bess.enabled" data-type="bool" data-val="${!hasBess()}" aria-pressed="${hasBess()}">${hasBess() ? '<span aria-hidden="true">✓</span> Battery' : '+ Battery'}</button>
+        <button class="pv-chip set" data-pc="setup" aria-pressed="${pv.sel === 'setup'}">Project set-up</button></div>
       <div class="pv-tot" data-live="pvbar|">${pvBarTot()}</div>
       <div class="pv-hz">${hzButtons()}</div>
     </div>`;
@@ -467,7 +469,7 @@
     }
   }
   function pvKey() {
-    return `<div class="pv-key"><span><i class="heatk"></i>Shading: share of the total uncertainty</span><span>${ring({ calc: 0.25, site: 0.25, desc: 0.25, generic: 0.25 }, 14)} Ring: evidence behind it</span>${legend()}</div>`;
+    return `<div class="pv-key">${pvPart() ? '' : '<b class="pv-hint">Select a part of the plant to change its inputs. Results on the right follow every change.</b>'}<span><i class="heatk"></i>Shading: share of the total uncertainty</span><span>${ring({ calc: 0.25, site: 0.25, desc: 0.25, generic: 0.25 }, 14)} Ring: evidence behind it</span>${legend()}</div>`;
   }
   function pvRefresh() {
     if (!pvMode()) return;
@@ -512,15 +514,15 @@
     const farm = isHybrid() && (v === 'wind' || v === 'solar');
     const blurb = v === 'site' ? 'A wind farm and a solar farm behind one grid connection. Select a farm to open its parts, or a shared part to see its categories.' : farm ? `Select a part of the ${v} farm to see its uncertainty categories.` : 'Select a part of the plant to see its uncertainty categories and give your inputs.';
     return `<div class="insp-in">
-      <div class="insp-top"><span class="eyebrow"><span>${esc(state.meta.name || 'Untitled project')}</span></span><span class="grow"></span>${farm ? '<button class="btn small" data-act="pvview" data-val="site">← Site</button>' : ''}</div>
-      ${exampleWarn()}<h2>${esc(pvTitle())}</h2><p class="insp-what">${blurb}</p>
+      <div class="insp-top"><span class="eyebrow"><span>${esc(state.meta.name || 'Untitled project')}</span></span><span class="grow"></span>${farm ? '<button class="btn small" data-act="pvview" data-val="site">← Site</button>' : ''}<button class="btn small" data-act="pvclose" aria-label="Close project set-up">Close</button></div>
+      <h2>${esc(pvTitle())}</h2><p class="insp-what">${blurb}</p>
       <div class="stack" data-live="pvsum|">${pvSummaryLive()}</div>
       ${isHybrid() && v === 'site' ? `<details class="pv-setup" data-sk="hybsum"${skOpen('hybsum')}><summary>Wind and solar together</summary><div class="pv-setup-in" data-live="hybsum|">${hybridSummary()}</div></details>` : ''}
-      ${!farm ? `<details class="pv-setup" data-sk="project"${skOpen('project')}><summary>Project set-up <span>${esc(lifeN() + '-year life' + (hasBess() ? ' · battery' : ''))}</span></summary><div class="pv-setup-in">
+      ${!farm ? `<details class="pv-setup" data-sk="project"${skOpen('project', true)}><summary>Project set-up <span>${esc(lifeN() + '-year life' + (hasBess() ? ' · battery' : ''))}</span></summary><div class="pv-setup-in">
         <div class="grid2">${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div>
         <div class="grid2">${numField({ path: 'horizon.life', label: 'Project lifetime', unit: 'years', step: 1, min: 1, rerender: true })}</div>
         ${segField({ path: 'bess.enabled', label: 'Battery and firm supply', type: 'bool', options: [['false', 'No'], ['true', 'Yes']] })}</div></details>` : ''}
-      <div class="insp-actions"><button class="btn primary" data-stage="results">Full results</button><button class="btn" data-act="mode" data-val="steps">Step-by-step view</button></div>
+      <div class="insp-actions"><button class="btn" data-act="mode" data-val="steps">Step-by-step view</button></div>
     </div>`;
   }
   function compStatHtml(id) {
@@ -591,7 +593,8 @@
           ${segField({ path: 'site.rhoMode', label: 'Air density at hub height', options: [['calc', 'From elevation and temperature'], ['entered', 'Enter a value']] })}
           <div class="grid2">${state.site.rhoMode === 'entered' ? numField({ path: 'site.rho', label: 'Air density', unit: 'kg/m³', step: 0.005 }) : numField({ path: 'site.elevation', label: 'Hub elevation', unit: 'm', step: 10 }) + numField({ path: 'site.tempC', label: 'Mean temperature at hub', unit: '°C', step: 0.5 })}</div>
           <p class="computed">In use: <b data-live="rho|${k}">${fx(C().en.rho, 3)} kg/m³</b> · sensitivity S <b data-live="sens|">${fx(C().en.S, 2)}</b></p>
-          ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
+          ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+          ${state.energy.p50Mode === 'gross' ? `<div class="grid2">${numField({ path: 'energy.gross', label: 'Gross energy of all turbines, before wakes and other losses', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           ${state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before shared grid losses' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           <p class="computed">P50 in use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></p>
           ${segField({ path: 'energy.sensMode', label: 'Wind-speed-to-energy sensitivity', options: [['computed', 'From the power curve'], ['entered', 'From my report']] })}
@@ -610,7 +613,8 @@
       case 's.array': return { sum: `${fx(+state.pv.dcMWp, 0)} MWp · ${{ fixed: 'fixed tilt', tracker: 'single-axis tracker', ew: 'east-west' }[state.pv.mount] || ''}${state.pv.bifacial ? ' · bifacial' : ''}`, body: `<div class="grid2">${numField({ path: 'pv.dcMWp', label: 'DC capacity', unit: 'MWp', step: 0.1 })}</div>
           ${segField({ path: 'pv.mount', label: 'Mounting', options: [['fixed', 'Fixed tilt'], ['tracker', 'Single-axis tracker'], ['ew', 'East-west']] })}
           ${segField({ path: 'pv.bifacial', label: 'Modules', type: 'bool', options: [['false', 'Monofacial'], ['true', 'Bifacial']] })}
-          ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
+          ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+          ${getPath(state, ep + '.p50Mode') === 'gross' ? `<div class="grid2">${numField({ path: ep + '.gross', label: 'Energy before losses (DC capacity × array irradiation)', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           ${getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before shared grid losses' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div>` : ''}
           <p class="computed">P50 in use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></p>` };
       case 's.inv': return { sum: `${fx(+state.pv.acMW, 0)} MWac · DC/AC ${fx((+state.pv.dcMWp || 0) / Math.max(0.01, +state.pv.acMW || 0), 2)}`, body: `<div class="grid2">${numField({ path: 'pv.acMW', label: 'AC capacity (inverter or export limit)', unit: 'MW', step: 0.1 })}</div><p class="computed">DC/AC ratio <b data-live="dcac|">${LIVE.dcac()}</b></p>` };
@@ -629,17 +633,21 @@
     const s = setupFor(id); if (!s) return '';
     return `<details class="pv-setup" data-sk="${esc(id)}"${skOpen(id, s.open)}><summary>Set-up <span>${s.sum}</span></summary><div class="pv-setup-in">${s.body}</div></details>`;
   }
-  function inspBuyer() {
+  function buyerStat() {
     const r = firm.res, stale = r && firm.key !== firmKey();
-    return `<div class="stack">
-      ${r ? `${stale ? '<p class="warn">Inputs changed since this run. Run again to update.</p>' : ''}<div class="pv-stat"><div><b>${fx(r.pMeet * 100, 0)} %</b><span>chance of meeting every rule, year ${r.year}</span></div><div><b>${fx(r.failedMonths, 1)}</b><span>months below target a year</span></div></div>
+    return r ? `<div class="pv-stat${stale ? ' stale' : ''}"><div><b>${fx(r.pMeet * 100, 0)} %</b><span>chance of meeting every rule, year ${r.year}${stale ? ' · updating' : ''}</span></div><div><b>${fx(r.failedMonths, 1)}</b><span>months below target a year</span></div></div>
         <dl class="kv"><dt>Shortfall P50 / P90</dt><dd>${fx(r.shortfall.p50 / 1000, 2)} / ${fx(r.shortfall.p90 / 1000, 2)} GWh</dd>${state.supply.tariff > 0 ? `<dt>Penalty P50 / P90</dt><dd>${money(r.penalty.p50)} / ${money(r.penalty.p90)}</dd>` : ''}<dt>Delivered with storage, P50</dt><dd>${fx(r.delivered.p50 / 1000, 1)} GWh/yr</dd><dt>Curtailed, P50</dt><dd>${fx(r.curtailed.p50 / 1000, 1)} GWh/yr</dd></dl>`
-        : '<p class="note">Not simulated yet. The simulation runs the plant and battery hour by hour against the demand, over hundreds of possible years.</p>'}
+      : '<p class="note">Simulating the plant and battery hour by hour against the demand, over hundreds of possible years…</p>';
+  }
+  function inspBuyer() {
+    const r = firm.res;
+    return `<div class="stack">
+      <div class="stack" data-live="firmbuyer|">${buyerStat()}</div>
       <div class="grid2">${numField({ path: 'supply.contractMW', label: 'Contracted capacity', unit: 'MW', step: 1, min: 0 })}${numField({ path: 'supply.tariff', label: 'Tariff', unit: (state.supply.currency || 'INR') + '/kWh', step: 0.01, min: 0 })}</div>
       ${segField({ path: 'supply.preset', label: 'Rule set', options: Object.entries(Firm.PRESETS).map(([kk, v]) => [kk, v.label]) })}
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="firmrun" ${firm.running ? 'disabled' : ''}>${firm.running ? 'Running…' : r ? 'Run again' : 'Run simulation'}</button><button class="btn" data-stage="supply">All supply settings</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-stage="supply">All supply settings</button></div>
       <p class="status" id="firmStatus">${esc(firm.progress)}</p>
-      <p class="side-note">Peak hours, hourly profiles, the penalty multiple and what drives the risk are under All supply settings.</p></div>`;
+      <p class="side-note">The simulation reruns after every change. Peak hours, hourly profiles, the penalty multiple and what drives the risk are under All supply settings.</p></div>`;
   }
   function inspLink() {
     return `<div class="stack"><div class="pv-stat"><div><b>${pv.sum.cross.var >= 0 ? '+' : '−'}${fx(Math.abs(pv.sum.cross.share) * 100, 1)} %</b><span>of the total variance</span></div><div><b>${result.focus.portfolioGain >= 0 ? '+' : ''}${fx(result.focus.portfolioGain, 1)}</b><span>GWh/yr portfolio gain at P90</span></div></div>
@@ -660,7 +668,7 @@
       ${id !== 'buyer' && id !== 'link' && id !== 'bess' ? '<p class="side-note">σ values are one standard deviation of energy. Each category shows its share of the plant total; categories inside a part combine as the root of the sum of squares.</p>' : ''}
     </div>`;
   }
-  function inspectorHtml() { return pv.sel ? inspComp(pv.sel) : inspPlant(); }
+  function inspectorHtml() { return pv.sel === 'setup' ? inspPlant() : pv.sel ? inspComp(pv.sel) : ''; }
 
   /* ---------- render ---------- */
   function renderPlant(keep) {
@@ -675,7 +683,7 @@
     pvNormalise(); pvSummarise();
     comp = pvComp();
     document.body.classList.toggle('pv-on', true);
-    sheet.innerHTML = `<div class="pv${pv.sel ? ' has-sel' : ''}${pv.full ? ' full' : ''}">${pvBar()}<div class="pv-body"><div class="pv-stage" id="pvStage"></div><aside class="pv-insp" id="pvInsp" aria-label="Details">${inspectorHtml()}</aside></div></div>`;
+    sheet.innerHTML = `<div class="pv${pvPart() ? ' has-sel' : ''}${pv.sel ? ' has-insp' : ''}${pv.full ? ' full' : ''}">${pvBar()}${state.meta.example ? '<p class="warn pv-ex">These are example values for a fictional project so you can see the tool working. Change any input, or start your own from Projects.</p>' : ''}<div class="pv-body"><div class="pv-stage" id="pvStage"></div>${pv.sel ? `<aside class="pv-insp" id="pvInsp" aria-label="${pv.sel === 'setup' ? 'Project set-up' : 'Inputs for the selected part'}">${inspectorHtml()}</aside>` : ''}</div></div>`;
     renderCanvas();
     if (!pv.ro && window.ResizeObserver) {
       pv.ro = new ResizeObserver(() => { if (!pvMode()) return; const st = $('#pvStage'); if (!st) return; const want = st.clientWidth >= 560 ? 'wide' : 'narrow'; if (want !== pv.layout) renderCanvas(); else if (want === 'wide') pvPlace(); });
@@ -726,3 +734,4 @@
   LIVE.pvsum = () => pvSummaryLive();
   LIVE.pvc = id => compStatHtml(id);
   LIVE.pvg = key => { const [cid, gid] = key.split('~'); return grpStat(cid, gid); };
+  LIVE.firmbuyer = () => buyerStat();

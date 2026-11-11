@@ -10,6 +10,7 @@ for tag, f in [('CSS', 'styles.css'), ('ENGINE', 'engine.js'), ('LIBRARY', 'libr
     body = (src / f).read_text()
     if f == 'ui.js':
         body = body.replace('/*@@PLANTVIEW@@*/', (src / 'plantview.js').read_text())
+        body = body.replace('/*@@RESULTS@@*/', (src / 'results.js').read_text())
     assert '</script' not in body.lower() or f.endswith('.css'), f
     html = html.replace(f'/*@@{tag}@@*/', body)
 out = dist / 'wind-energy-uncertainty.html'
