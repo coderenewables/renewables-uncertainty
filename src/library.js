@@ -666,7 +666,14 @@ const Library = (() => {
 
   /* ---------------- Solar PV ---------------- */
   const S = 'solar';
-  const clipL = r => (r <= 1.2 ? 0.3 : r <= 1.35 ? 1.0 : r <= 1.5 ? 2.5 : 4.0);
+  /* Clipping loss (% of energy) estimated from the DC/AC ratio: a smooth curve through typical simulated
+     values, rising without a cap. Framework judgement; a time-series simulation replaces it. */
+  const CLIP_PTS = [[1.0, 0], [1.1, 0.1], [1.2, 0.3], [1.3, 1.0], [1.4, 2.2], [1.5, 3.8], [1.7, 8], [2.0, 15], [2.5, 26], [3.0, 34]];
+  const clipL = r => {
+    if (!(r > CLIP_PTS[0][0])) return 0;
+    for (let i = 1; i < CLIP_PTS.length; i++) if (r <= CLIP_PTS[i][0]) { const [x0, y0] = CLIP_PTS[i - 1], [x1, y1] = CLIP_PTS[i]; return +(y0 + (y1 - y0) * (r - x0) / (x1 - x0)).toFixed(2); }
+    return CLIP_PTS[CLIP_PTS.length - 1][1];
+  };
   const SOLAR_ITEMS = [
     {
       id: 'sat_model', tech: S, stage: 'irradiance', cat: 'irradiance_source', sub: 'satellite_model', domain: 'res', when: ctx => ctx.solarSource === 'satellite',
@@ -866,7 +873,7 @@ const Library = (() => {
       name: 'Inverter clipping', defaultMode: 'desc',
       calc: { fields: [{ key: 'L', label: 'Clipping loss from your simulation', unit: '%', def: 1.0, step: 0.1 }, { key: 'sub', label: 'Time step of the simulation', type: 'select', def: 'hourly', options: [['hourly', 'Hourly'], ['sub', '15 minutes or finer']] }],
         fn: x => ({ L: x.L, s: Math.max(0.2, (x.sub === 'sub' ? 0.25 : 0.5) * x.L) }), note: 's = 50 % of the loss for hourly simulations, 25 % for sub-hourly' },
-      desc: { options: [{ label: 'Estimate from the DC/AC ratio', v: ctx => { const L = clipL(ctx.dcac); return { L, s: Math.max(0.2, 0.5 * L) }; } }] },
+      desc: { options: [{ label: 'Estimate from the DC/AC ratio', v: ctx => { const L = clipL(ctx.dcac); return { L, s: Math.max(0.2, Math.min(0.5 * L, 1 + 0.2 * L)) }; } }] },
       def: { v: { L: 1.0, s: 0.5 } },
       src: ['sgsub', 'judge'],
       info: { what: 'When DC power exceeds the inverter rating, the extra is lost (unless storage captures it).', drives: 'DC/AC ratio, irradiance peaks, cloud-edge events, module degradation over time.', reduce: 'Simulate with 15-minute or finer data, especially at DC/AC ratios above about 1.3.', values: 'Solargis finds hourly data underestimates clipping, more so at higher DC/AC ratios. The estimate by DC/AC ratio is framework judgement.' },

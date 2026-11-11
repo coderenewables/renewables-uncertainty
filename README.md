@@ -8,13 +8,16 @@ It runs entirely in the browser: one self-contained HTML page (HTML + JavaScript
 
 ## What it does
 
+- **Results that stay on screen:** P50 to P99, the range of outcomes, the bridge from gross to net and the largest uncertainty drivers sit beside the inputs and follow every change. Figures that moved are tagged with the change; pin a baseline to compare two sets of inputs.
+- **Gross to net:** every loss as a share of what is left, by group or by item, for wind, solar and hybrids (shared connection losses act on wind plus solar). Start from the tool's estimate, your own gross energy or a P50 from a report. This was LossStack, now part of WattOdds.
 - **Plant view (default):** a drawing of the plant. Each part (masts and lidars, long-term reference, extrapolation, turbines, PV array, inverters, grid connection, battery …) shows its energy uncertainty and its share of the total. Selecting a part pops out its uncertainty categories; the inspector holds the inputs.
 - **Step-by-step view:** the same project as a chain of stages following IEC 61400-15-2 (wind) and IEA PVPS Task 13 (solar).
 - **Five ways to set each item:** calculate from site inputs, describe the site, enter a value, use a generic default, or exclude — with an evidence tier tracked for each.
 - **Combination:** GUM-style analytical combination (root-sum-square within categories, correlations across categories, wind-speed-to-energy sensitivity from the power curve), P50–P99 for 1-year, 10-year and lifetime periods, and a Monte Carlo check.
 - **Hybrids:** wind and solar combined by energy share with year-to-year and assessment correlations; shared grid items counted once; portfolio gain at P90.
-- **Battery and firm supply:** hourly simulation of plant + battery against supply rules (e.g. SECI FDRE), with a Monte Carlo over operating years, shortfall, penalty and the drivers of risk.
-- **Exports:** Excel workbook (summary, uncertainty register, plant parts, inputs, firm supply, sources) and a JSON project file.
+- **Battery and firm supply:** hourly simulation of plant + battery against supply rules (e.g. SECI FDRE), with a Monte Carlo over operating years, shortfall, penalty and the drivers of risk. It reruns after each change, so delivered energy, battery losses and the chance of meeting the rules stay current.
+- **Checks on the inputs:** capacity factors, performance ratios, plane-of-array ratios and clipping that do not fit the plant are flagged, with a link to the part concerned.
+- **Exports:** Excel workbook (summary, uncertainty register, gross to net, plant parts, inputs, firm supply, sources), a loss table as CSV and a JSON project file.
 
 ## Layout
 
@@ -28,6 +31,7 @@ src/
   bess.js        hourly storage and firm-supply simulation (no DOM)
   plant.js       places every item on a plant part and category; part totals (no DOM)
   plantview.js   plant drawing and inspector (inlined into ui.js at build time)
+  results.js     results rail: P-values, odds curve, gross-to-net bridge, drivers, baseline (inlined into ui.js)
   ui.js          interface
 build.py         concatenates src/ into dist/wind-energy-uncertainty.html and builds the website in dist/site/
 dist/            the built single-file page (file name kept from before the rename so existing links keep working);
@@ -49,7 +53,7 @@ coderenewables.com is deployed by GitHub Pages on every push to `main` (`.github
 ## Tests
 
 ```
-node tests/engine.test.js     # analytical engine: wind, solar, hybrid
+node tests/engine.test.js     # analytical engine: wind, solar, hybrid, gross to net, input checks
 node tests/bess.test.js       # storage and firm supply
 node tests/plant.test.js      # plant parts add up to the total
 node tests/smoke.js  <outdir>             # step-by-step view in a browser
@@ -58,7 +62,7 @@ node tests/export.js <outdir> <xlsx.full.min.js> [solar|hybrid|bess]
 node tests/suite.js <home-page> <loss-stack>  # suite project: LossStack opens in WattOdds with the same P50
 ```
 
-The browser checks use Playwright; the paths to Playwright and Chromium at the top of those files point at the environment they were written in and may need changing.
+The browser checks use Playwright (`npm i playwright`).
 
 ## Suite project
 
