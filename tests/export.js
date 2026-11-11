@@ -1,4 +1,4 @@
-const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const OUT = process.argv[2], XL = process.argv[3];
 const body = fs.readFileSync(path.join(__dirname, '../dist/wind-energy-uncertainty.html'), 'utf8');
@@ -6,7 +6,7 @@ const stub = `<script>${fs.readFileSync(XL, 'utf8')}</script>`;
 const page = `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"></head><body>${stub}${body}</body></html>`;
 const file = path.join(OUT, 'export.html'); fs.writeFileSync(file, page);
 (async () => {
-  const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const b = await chromium.launch();
   const p = await (await b.newContext({ acceptDownloads: true })).newPage();
   const saved = [];
   p.on('download', async d => { const f = await d.path(); saved.push({ filename: d.suggestedFilename(), size: fs.statSync(f).size }); });

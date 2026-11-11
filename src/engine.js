@@ -261,15 +261,19 @@ const Engine = (() => {
     let eff = 1;
     model.items.filter(i => i.domain === 'loss' && i.time !== 'horizon').forEach(i => { eff *= (1 - i.L / 100); });
     const entered = pe.p50Mode === 'entered' && num(pe.p50, 0) > 0;
+    // 'gross': the gross energy comes from the user's own model (wake model, PV simulation); the losses set here take it to net
+    const grossIn = pe.p50Mode === 'gross' && num(pe.gross, 0) > 0;
+    const source = entered ? 'entered' : grossIn ? 'gross' : 'computed';
     const sEntered = pe.sensMode === 'entered' && num(pe.sens, 0) > 0;
     if (model.tech === 'solar') {
       const refYield = ctx.ghi * ctx.poaRatio;                 // kWh/m² on the array ≈ reference yield, kWh/kWp
-      const grossGWh = ctx.dc * refYield / 1000;              // MWp × kWh/kWp → GWh
-      const netComputed = grossGWh * eff;
-      const p50 = entered ? num(pe.p50, 0) : netComputed;
+      const grossTool = ctx.dc * refYield / 1000;             // MWp × kWh/kWp → GWh
+      const grossGWh = grossIn ? num(pe.gross, 0) : grossTool;
+      const netComputed = grossTool * eff;
+      const p50 = entered ? num(pe.p50, 0) : grossGWh * eff;
       const S = sEntered ? num(pe.sens, 0) : 1.0;
       return {
-        tech: 'solar', grossGWh, netComputed, eff, p50, p50Source: entered ? 'entered' : 'computed',
+        tech: 'solar', grossGWh, grossTool, netComputed, eff, p50, p50Source: source,
         cf: p50 * 1000 / (ctx.ac * 8760), grossCf: grossGWh * 1000 / (ctx.ac * 8760),
         refYield, specYield: p50 * 1000 / ctx.dc, pr: eff,
         S, sCalc: 1.0, sSource: sEntered ? 'entered' : 'computed', table: null, linearTable: true,
@@ -277,9 +281,10 @@ const Engine = (() => {
     }
     const curve = ctx.curve.fn;
     const p1 = meanPower(curve, ctx.meanWs, ctx.k, 1);
-    const grossGWh = p1 * 8760 * ctx.nTurbines / 1000;
-    const netComputed = grossGWh * eff;
-    const p50 = entered ? num(pe.p50, 0) : netComputed;
+    const grossTool = p1 * 8760 * ctx.nTurbines / 1000;
+    const grossGWh = grossIn ? num(pe.gross, 0) : grossTool;
+    const netComputed = grossTool * eff;
+    const p50 = entered ? num(pe.p50, 0) : grossGWh * eff;
     const d = 0.01;
     const up = meanPower(curve, ctx.meanWs, ctx.k, 1 + d), dn = meanPower(curve, ctx.meanWs, ctx.k, 1 - d);
     const sCalc = p1 > 0 ? (up - dn) / (2 * d * p1) : 1.8;
@@ -287,7 +292,7 @@ const Engine = (() => {
     const table = [];
     for (let w = 0.5; w <= 1.5001; w += 0.02) table.push([w, p1 > 0 ? meanPower(curve, ctx.meanWs, ctx.k, w) / p1 : w]);
     return {
-      tech: 'wind', grossGWh, netComputed, eff, p50, p50Source: entered ? 'entered' : 'computed',
+      tech: 'wind', grossGWh, grossTool, netComputed, eff, p50, p50Source: source,
       cf: ctx.capacityMW > 0 ? p50 * 1000 / (ctx.capacityMW * 8760) : 0,
       grossCf: ctx.capacityMW > 0 ? grossGWh * 1000 / (ctx.capacityMW * 8760) : 0,
       S, sCalc, sSource: sEntered ? 'entered' : 'computed', table, linearTable: sEntered,
@@ -648,7 +653,7 @@ const Engine = (() => {
     const p50y1 = H[1].p50;
     const en = {
       tech: 'hybrid', p50: p50y1, eff: effSh, netComputed: (rw.en.netComputed + rs.en.netComputed) * effSh,
-      p50Source: rw.en.p50Source === 'entered' || rs.en.p50Source === 'entered' ? 'entered' : 'computed',
+      p50Source: rw.en.p50Source === 'entered' || rs.en.p50Source === 'entered' ? 'entered' : rw.en.p50Source === 'gross' || rs.en.p50Source === 'gross' ? 'gross' : 'computed',
       cf: p50y1 * 1000 / (gridMW * 8760), cfInstalled: p50y1 * 1000 / ((windMW + solarAC) * 8760),
       windShare: H[1].comb.aw, solarShare: H[1].comb.as, S: null,
     };
@@ -660,6 +665,122 @@ const Engine = (() => {
     };
   }
 
-  return { Z, PLEVELS, gamma, cholesky, rng, weibullFromMoments, airDensity, genericCurve, parseCurve, customCurve, curveFor, meanPower, buildContext, evalItem, buildModel, energy, combine, pvalues, contributions, evaluate, evaluateHybrid, monteCarlo, techSampler, itemSampler, climateSigma, lossAt, p50Factor, techOf, forTech, hybridStageOf, exportLimitLoss, isRes, TIER_OF_MODE, IEC_BASIS, num, clamp };
+  /* ---------- gross to net: the loss bridge ---------- */
+  /* Groups in the order the energy meets them on the way from the resource to the meter. */
+  const BRIDGE_ORDER = {
+    wind: [['turbine_interaction', 'Wakes and blockage'], ['turbine_performance', 'Turbine performance'], ['environmental', 'Environmental'],
+      ['electrical', 'Electrical'], ['availability', 'Availability'], ['curtailment', 'Curtailment']],
+    solar: [['plane_of_array', 'Plane of array'], ['shading_optical', 'Shading and optics'], ['thermal', 'Temperature'], ['module', 'Modules'],
+      ['dc_inverter', 'DC side and inverter'], ['electrical', 'Electrical'], ['availability', 'Availability'], ['curtailment', 'Curtailment'], ['degradation', 'Degradation']],
+    shared: [['electrical', 'Export line'], ['availability', 'Grid availability'], ['curtailment', 'Curtailment at the connection']],
+  };
+  const prettyCat = c => String(c || 'other').replace(/_/g, ' ').replace(/^./, m => m.toUpperCase());
+  function orderLoss(items, kind) {
+    const ord = BRIDGE_ORDER[kind] || [];
+    const idx = c => { const i = ord.findIndex(o => o[0] === c); return i < 0 ? ord.length : i; };
+    const name = c => { const o = ord.find(x => x[0] === c); return o ? o[1] : prettyCat(c); };
+    return items.filter(i => i.domain === 'loss').map((it, n) => ({ it, n, gi: idx(it.cat), gname: name(it.cat) }))
+      .sort((a, b) => a.gi - b.gi || a.n - b.n);
+  }
+  /* The gross energy the bridge starts from. When the P50 was entered from a report, the gross is the
+     one the losses imply (P50 ÷ efficiency), so the bridge always lands on the P50 in use. */
+  function grossOf(en) {
+    if (en.p50Source === 'entered') return { gross: en.eff > 0 ? en.p50 / en.eff : en.p50, implied: true };
+    return { gross: en.grossGWh, implied: false };
+  }
+  /* One plant's losses applied to its own stream. Returns the steps and the energy left. */
+  function streamSteps(model, kind, comp, start, N) {
+    let e = start, v = 0;
+    const steps = orderLoss(model.items, kind).map(({ it, gname }) => {
+      const la = lossAt(it, N), before = e, lost = before * la.L / 100;
+      e = before - lost;
+      const eta = Math.max(0.05, 1 - la.L / 100);
+      const vr = (la.s / eta) ** 2 + (it.time === 'horizon' ? 0 : (it.iav / eta) ** 2 / N);
+      v += vr;
+      return { key: it.key, id: it.id, name: it.name, comp, cat: it.cat, group: (comp ? comp + ':' : '') + it.cat, groupName: gname, L: la.L, s: la.s, iav: it.time === 'horizon' ? 0 : it.iav,
+        rate: it.time === 'horizon' ? it.L : null, mode: it.mode, tier: it.tier, excluded: it.mode === 'none', lost, streamBefore: before, streamAfter: e, variance: vr };
+    });
+    return { steps, end: e, variance: v };
+  }
+  /* Gross to net at an N-year average for a whole project (wind, solar or hybrid). Energy in GWh/yr.
+     steps[].before/after run from the total gross down to the net; a hybrid has two gross streams
+     (wind, solar) and the shared connection losses act on their sum. */
+  function lossBridge(r, N) {
+    N = N || r.focusN;
+    let steps = [], sources, net, implied = false, lossVar = 0;
+    if (r.hybrid) {
+      const gw = grossOf(r.wind.en), gs = grossOf(r.solar.en);
+      implied = gw.implied || gs.implied;
+      const w = streamSteps(r.wind.model, 'wind', 'wind', gw.gross, N), so = streamSteps(r.solar.model, 'solar', 'solar', gs.gross, N);
+      const sh = streamSteps({ items: r.hyb.shared }, 'shared', 'hybrid', w.end + so.end, N);
+      sources = [{ comp: 'wind', name: 'Wind gross', gross: gw.gross }, { comp: 'solar', name: 'Solar gross', gross: gs.gross }];
+      steps = [...w.steps, ...so.steps, ...sh.steps];
+      net = sh.end;
+      const T = Math.max(1e-9, w.end + so.end), aw = w.end / T, as = so.end / T;
+      lossVar = aw * aw * w.variance + as * as * so.variance + sh.variance;
+    } else {
+      const g = grossOf(r.en); implied = g.implied;
+      const kind = r.tech === 'solar' ? 'solar' : 'wind';
+      const st = streamSteps(r.model, kind, null, g.gross, N);
+      sources = [{ comp: null, name: 'Gross energy', gross: g.gross }];
+      steps = st.steps; net = st.end; lossVar = st.variance;
+    }
+    const gross = sources.reduce((a, s) => a + s.gross, 0);
+    let run = gross;
+    steps.forEach(s => { s.before = run; run -= s.lost; s.after = run; });
+    const groups = [];
+    steps.forEach(s => {
+      let g = groups[groups.length - 1];
+      if (!g || g.id !== s.group) { g = { id: s.group, comp: s.comp, cat: s.cat, name: s.groupName, before: s.before, streamBefore: s.streamBefore, lost: 0, steps: [], variance: 0 }; groups.push(g); }
+      g.steps.push(s); g.lost += s.lost; g.after = s.after; g.streamAfter = s.streamAfter; g.variance += s.variance;
+    });
+    groups.forEach(g => { g.L = g.streamBefore > 0 ? (1 - g.streamAfter / g.streamBefore) * 100 : 0; });
+    return { N, gross, sources, net, implied, steps, groups, lossPct: gross > 0 ? (1 - net / gross) * 100 : 0, lossSigma: Math.sqrt(Math.max(0, lossVar)) };
+  }
+
+  /* ---------- plausibility checks on the inputs ---------- */
+  /* Each check: { level: 'warn' | 'note', id, text, part } — part is the plant part to open. */
+  function sanity(project, r) {
+    const out = [];
+    const add = (level, id, text, part) => out.push({ level, id, text, part: part || null });
+    const windChecks = (rr, pre) => {
+      const en = rr.en, ctx = rr.model.ctx;
+      if (en.grossCf > 0.65) add('warn', pre + 'grosscf', `Gross capacity factor is ${(en.grossCf * 100).toFixed(0)} %. Few sites exceed 60 %: check the gross energy, the turbine count and the rated power.`, 'w.turbines');
+      else if (en.grossCf > 0 && en.grossCf < 0.15) add('warn', pre + 'grosscf', `Gross capacity factor is only ${(en.grossCf * 100).toFixed(0)} %. Check the mean wind speed, the gross energy and the rated power.`, 'w.turbines');
+      if (en.p50Source === 'entered' && en.netComputed > 0) {
+        const d = (en.p50 / en.netComputed - 1) * 100;
+        if (Math.abs(d) > 20) add('note', pre + 'p50gap', `Your P50 is ${Math.abs(d).toFixed(0)} % ${d > 0 ? 'above' : 'below'} what the power curve, wind climate and losses give here. One of them does not match your report.`, 'w.turbines');
+      }
+      const wake = rr.model.items.find(i => i.id === 'wake_int');
+      if (wake && wake.mode !== 'none' && ctx.nTurbines >= 20 && wake.L < 3) add('note', pre + 'wake', `Internal wake loss of ${wake.L.toFixed(1)} % is low for ${ctx.nTurbines} turbines.`, 'w.turbines');
+      const tot = (1 - en.eff) * 100;
+      if (tot < 8) add('note', pre + 'lowloss', `Total wind plant losses of ${tot.toFixed(1)} % are below what operating plants usually show (roughly 12–25 %).`, 'w.turbines');
+    };
+    const solarChecks = (rr, pre) => {
+      const en = rr.en, ctx = rr.model.ctx;
+      if (ctx.mount === 'tracker' && ctx.poaRatio < 1.12) add('warn', pre + 'poa', `Single-axis tracker with a plane-of-array to GHI ratio of ${ctx.poaRatio.toFixed(2)}. Trackers usually give 1.15–1.35: check the ratio.`, 's.model');
+      if (ctx.mount === 'fixed' && ctx.poaRatio > 1.25) add('warn', pre + 'poa', `Fixed tilt with a plane-of-array to GHI ratio of ${ctx.poaRatio.toFixed(2)}. That is usual only at high latitudes or with trackers.`, 's.model');
+      if (ctx.mount === 'ew' && ctx.poaRatio > 1.02) add('note', pre + 'poa', `East-west arrays usually collect a little less than GHI; the ratio is ${ctx.poaRatio.toFixed(2)}.`, 's.model');
+      const clip = rr.model.items.find(i => i.id === 'clipping');
+      if (clip && clip.mode !== 'none' && ctx.dcac > 1.5 && clip.L < 3) add('warn', pre + 'clip', `DC/AC ratio of ${ctx.dcac.toFixed(2)} with only ${clip.L.toFixed(1)} % clipping. At this ratio clipping is normally several percent.`, 's.inv');
+      if (ctx.dcac < 0.95) add('note', pre + 'dcac', `DC capacity is below AC capacity (DC/AC ${ctx.dcac.toFixed(2)}). Check both values.`, 's.inv');
+      if (en.pr > 0.9) add('warn', pre + 'pr', `Performance ratio of ${(en.pr * 100).toFixed(0)} % is higher than well-run plants achieve (usually 75–88 %). A loss is probably missing.`, 's.array');
+      else if (en.pr < 0.65) add('note', pre + 'pr', `Performance ratio of ${(en.pr * 100).toFixed(0)} % is low. Check for a loss counted twice.`, 's.array');
+      if (en.cf > 0.4) add('warn', pre + 'cf', `Solar capacity factor of ${(en.cf * 100).toFixed(0)} % on AC capacity is very high. Check GHI, DC and AC capacity.`, 's.inv');
+      if (en.p50Source === 'entered' && en.netComputed > 0) {
+        const d = (en.p50 / en.netComputed - 1) * 100;
+        if (Math.abs(d) > 15) add('note', pre + 'p50gap', `Your solar P50 is ${Math.abs(d).toFixed(0)} % ${d > 0 ? 'above' : 'below'} what the irradiation and losses give here.`, 's.array');
+      }
+    };
+    if (r.hybrid) {
+      windChecks(r.wind, 'w-'); solarChecks(r.solar, 's-');
+      const c = r.model.ctx;
+      if (c.connFrac < 0.5) add('note', 'conn', `The connection is ${(c.connFrac * 100).toFixed(0)} % of combined capacity. Curtailment at the export limit is large and depends on the hourly shape: confirm it with a time-series simulation.`, 'grid');
+    } else if (r.tech === 'solar') solarChecks(r, '');
+    else windChecks(r, '');
+    return out;
+  }
+
+  return { Z, PLEVELS, gamma, cholesky, rng, weibullFromMoments, airDensity, genericCurve, parseCurve, customCurve, curveFor, meanPower, buildContext, evalItem, buildModel, energy, combine, pvalues, contributions, evaluate, evaluateHybrid, monteCarlo, techSampler, itemSampler, climateSigma, lossAt, p50Factor, techOf, forTech, hybridStageOf, exportLimitLoss, isRes, TIER_OF_MODE, IEC_BASIS, num, clamp, lossBridge, sanity, BRIDGE_ORDER, grossOf };
 })();
 if (typeof module !== 'undefined') module.exports = Engine;

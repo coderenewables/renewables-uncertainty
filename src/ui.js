@@ -68,10 +68,10 @@
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify({ state, stage })); } catch (e) { /* ignore */ } }, 500);
   }
-  function touch() { state.meta.updated = new Date().toISOString(); saveLocal(); updateSaveTag(); }
+  function touch() { state.meta.updated = new Date().toISOString(); saveLocal(); updateSaveTag(); suiteSchedule(); }
 
   /* ---------- evaluation and scheduling ---------- */
-  function recompute() { result = E.evaluate(state, Lb); }
+  function recompute() { result = E.evaluate(state, Lb); firmSchedule(); }
   let raf = 0;
   function scheduleLive() { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; recompute(); updateLive(); }); }
   function rerender() { recompute(); renderStage(pvMode()); updateChrome(); }
@@ -94,7 +94,7 @@
       <div class="frame">
         <nav class="rail" aria-label="Uncertainty chain"><ul class="chain" id="chain"></ul><div class="rail-foot" id="railFoot"></div></nav>
         <main class="sheet" id="sheet" tabindex="-1"></main>
-        <aside class="side" id="side" aria-label="Live result"></aside>
+        <aside class="side" id="side" aria-label="Results, updated as you type"></aside>
       </div>
       <div class="bottombar" id="bottombar"></div>`;
   }
@@ -139,32 +139,17 @@
   }
 
   function renderSide() {
-    const r = result, pv = r.focus.pv, p50 = r.focus.p50;
-    $('#side').innerHTML = `<div class="res-card">
-      ${hzButtons()}
-      <div class="hero"><span class="lbl">P90, ${hzLabel()} average</span>
-        <span class="big">${fx(pv.P90, 1)} <small>GWh/yr</small></span>
-        <span class="sub"><span class="ratio">${fx(pv.P90 / p50 * 100, 1)} %</span> of P50 · σ ${fx(r.focus.sigma, 2)} %</span></div>
-      <dl class="kv">
-        <dt>${hasSolar() ? 'P50 year 1' : 'P50 net at POI'}</dt><dd>${fx(r.en.p50, 1)}</dd>
-        ${hasSolar() && r.focusN > 1 ? `<dt>P50, ${hzLabel()} average</dt><dd>${fx(p50, 1)}</dd>` : ''}
-        <dt>P75</dt><dd>${fx(pv.P75, 1)}</dd>
-        <dt>P95</dt><dd>${fx(pv.P95, 1)}</dd>
-        <dt>P99</dt><dd>${fx(pv.P99, 1)}</dd>
-        <dt>Net CUF (P50)${isHybrid() ? ', on connection' : ''}</dt><dd>${fx(r.en.cf * 100, 1)} %</dd>
-        ${isHybrid() ? `<dt>Portfolio gain at P90</dt><dd>+${fx(r.focus.portfolioGain, 1)}</dd>` : ''}
-      </dl>
-      <div class="stack" style="gap:8px"><h4>Evidence behind the total</h4>${mixBar(r.mix)}${legend()}
-        ${r.none.length ? `<p class="side-note">${r.none.length} item${r.none.length > 1 ? 's' : ''} excluded.</p>` : ''}</div>
-      <button class="btn" data-stage="results">Open results</button>
-      <p class="side-note">GWh/yr. P-values assume a normal distribution of the combined uncertainty; Results also runs a Monte Carlo check.</p>
-    </div>`;
+    const side = $('#side'); if (!side) return;
+    const y = side.scrollTop, r = result, pv = r.focus.pv, p50 = r.focus.p50;
+    side.innerHTML = railHtml();
+    side.scrollTop = y;
     $('#bottombar').innerHTML = `
-      <div class="bb-fig"><span class="l">P50${hasSolar() && r.focusN > 1 ? ' ' + hzLabel() : ''}</span><span class="v">${fx(p50, 1)}</span></div>
-      <div class="bb-fig"><span class="l">P90 ${hzLabel()}</span><span class="v">${fx(pv.P90, 1)}</span></div>
+      <div class="bb-fig"><span class="l">P50${hasSolar() && r.focusN > 1 ? ' ' + hzLabel() : ''}</span><span class="v">${rrNum('bb50', p50, 1)}</span></div>
+      <div class="bb-fig"><span class="l">P90 ${hzLabel()}</span><span class="v">${rrNum('bb90', pv.P90, 1)}</span></div>
       <div class="bb-fig"><span class="l">P90/P50</span><span class="v ratio">${fx(pv.P90 / p50 * 100, 1)} %</span></div>
       <span class="grow"></span>
-      ${stage === 'results' ? '' : '<button class="btn small" data-stage="results">Results</button>'}`;
+      <button class="btn small primary" data-act="rrsheet" aria-expanded="${rr.sheet}">Results</button>`;
+    rrAnimate(side); rrAnimate($('#bottombar'));
   }
 
   function updateSaveTag() {
@@ -393,8 +378,8 @@
         ${numField({ path: 'pv.poaRatio', label: 'Plane-of-array to GHI ratio', step: 0.01, hint: 'From your simulation. Typical: fixed tilt about 1.05–1.15, single-axis tracker about 1.15–1.30 at low latitudes.' })}
       </div></section>
       <section class="panel"><header><h3>${hyb ? 'Solar P50, year 1, before shared grid losses' : 'Net P50, year 1'}</h3><span class="computed">In use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></span></header>
-        ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
-        ${getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before export line, grid availability and curtailment' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Irradiation on the array × DC capacity × the product of the losses you set (the performance ratio).${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your simulation\'s year-1 P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
+        ${segField({ path: ep + '.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+        ${getPath(state, ep + '.p50Mode') === 'gross' ? `<div class="grid2">${numField({ path: ep + '.gross', label: 'Energy before losses (DC capacity × array irradiation)', unit: 'GWh/yr', step: 0.1, hint: 'From your PV simulation, before any loss.' })}</div><p class="note">The losses you set take this to the P50. Tool estimate of the gross for comparison: <b>${fx(C().en.grossTool, 1)} GWh/yr</b>.</p>` : getPath(state, ep + '.p50Mode') === 'entered' ? `<div class="grid2">${numField({ path: ep + '.p50', label: hyb ? 'Solar P50, year 1, before export line, grid availability and curtailment' : 'Net P50 at the POI, year 1', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Irradiation on the array × DC capacity × the product of the losses you set (the performance ratio).${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your simulation\'s year-1 P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
       </section>`;
   }
   function windPanels() {
@@ -423,8 +408,8 @@
         ${numField({ path: 'climate.k', label: 'Weibull shape factor k', step: 0.05, hint: 'Typically 1.8–2.4. Higher values mean a narrower distribution.' })}
       </div></section>
       <section class="panel"><header><h3>${hyb ? 'Wind P50 before shared grid losses' : 'Net P50'}</h3><span class="computed">In use: <b data-live="p50|${k}">${fx(C().en.p50, 1)} GWh/yr</b></span></header>
-        ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['entered', 'From my energy yield report']] })}
-        ${state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before export line, grid availability and curtailment' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">The tool still uses the power curve and wind climate to convert wind speed uncertainty into energy. Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Gross energy from the power curve and Weibull distribution, less the plant losses you set.${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your consultant\'s P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
+        ${segField({ path: 'energy.p50Mode', label: 'Where the P50 comes from', options: [['computed', 'Estimated by this tool'], ['gross', 'My gross energy, less these losses'], ['entered', 'From my energy yield report']] })}
+        ${state.energy.p50Mode === 'gross' ? `<div class="grid2">${numField({ path: 'energy.gross', label: 'Gross energy of all turbines, before wakes and every other loss', unit: 'GWh/yr', step: 0.1, hint: 'Free-stream energy from your wind flow or wake model.' })}</div><p class="note">The losses you set take this to the P50. Tool estimate of the gross for comparison: <b>${fx(C().en.grossTool, 1)} GWh/yr</b>.</p>` : state.energy.p50Mode === 'entered' ? `<div class="grid2">${numField({ path: 'energy.p50', label: hyb ? 'Wind P50 before export line, grid availability and curtailment' : 'Net P50 at the POI', unit: 'GWh/yr', step: 0.1 })}</div><p class="note">The tool still uses the power curve and wind climate to convert wind speed uncertainty into energy. Tool estimate for comparison: <b data-live="computedP50|${k}">${fx(C().en.netComputed, 1)} GWh/yr</b>.</p>` : `<p class="note">Gross energy from the power curve and Weibull distribution, less the plant losses you set.${hyb ? ' Shared grid losses are applied once, to the combined output, under Shared connection.' : ' Use your consultant\'s P50 if you have one: the uncertainty percentages stay the same, the GWh values follow your P50.'}</p>`}
       </section>`;
   }
   function withComp(c, fn) { const prev = comp; comp = c; try { return fn(); } finally { comp = prev; } }
@@ -739,7 +724,6 @@
   }
   function stageSupply() {
     const sp = state.supply, preset = Firm.PRESETS[sp.preset] || Firm.PRESETS.fdre4, key = firmKey();
-    const stale = firm.res && firm.key !== key;
     const prof = sp.profile || {};
     return `${stageHead('supply')}<div class="stack">
       <section class="panel"><header><h3>Supply obligation</h3></header>
@@ -773,13 +757,12 @@
         <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
           ${segField({ path: 'supply.year', label: 'Operating year', options: [['1', 'Year 1'], ['10', 'Year 10'], ['life', 'Year ' + lifeN()]] })}
           <div style="width:170px">${selField({ path: 'supply.samples', label: 'Simulated years', options: [['200', '200'], ['400', '400'], ['1000', '1,000'], ['2000', '2,000']] })}</div>
-          <button class="btn primary" data-act="firmrun" ${firm.running ? 'disabled' : ''}>${firm.running ? 'Running…' : firm.res ? 'Run again' : 'Run simulation'}</button>
-          <button class="btn" data-act="firmdrivers" ${firm.running || !firm.res ? 'disabled' : ''}>Find what drives the risk</button>
+          <span data-live="firmctl|" style="display:contents">${LIVE.firmctl()}</span>
         </div>
         <p class="status" id="firmStatus">${esc(firm.progress)}</p>
         <p class="formula">Each simulated year draws wind and solar energy from the uncertainty chain (one-year horizon${isHybrid() ? ', with the wind–solar correlations' : ''}), reshuffles days within each month, and draws battery capacity, fade, efficiency, outages and dispatch shortfall. Dispatch is hourly and rule-based.</p>
       </section>
-      ${firm.res ? `${stale ? '<p class="warn">Inputs changed since this run. Run again to update.</p>' : ''}${firmResults()}` : ''}
+      <div class="stack" data-live="firmres|">${LIVE.firmres()}</div>
       </div>${stageNav('supply')}`;
   }
 
@@ -862,7 +845,7 @@
   }
 
   async function runFirm(withDrivers) {
-    if (firm.running) return;
+    if (firm.running) { if (firm.auto) setTimeout(() => runFirm(withDrivers), 150); return; }   // wait for the background run
     firm.running = true; firm.progress = 'Preparing hourly profiles…';
     if (pvMode() || stage === 'supply') renderStage(true);
     await new Promise(r => setTimeout(r, 20));
@@ -877,7 +860,7 @@
         firm.res = await Firm.run(prep, { n, year }, tick);
         firm.central = Firm.central(prep, year);
         firm.drivers = null;
-        firm.key = firmKey();
+        firm.key = firmKey(); firm.centralKey = firm.key;
       }
       firm.progress = withDrivers ? 'Done.' : `Done: ${n.toLocaleString('en')} years simulated.`;
     } catch (e) {
@@ -1051,7 +1034,7 @@
     return `${stageHead('results')}<div class="stack" style="gap:22px">
       <div style="max-width:420px">${hzButtons()}</div>
       <div class="tiles">
-        <div class="tile"><span class="lbl">Net P50 at the POI${hasSolar() ? ', year 1' : ''}</span><span class="val">${fx(r.en.p50, 1)} <small>GWh/yr</small></span><span class="sub">CUF ${fx(r.en.cf * 100, 1)} % · ${r.en.p50Source === 'entered' ? 'from your report' : 'tool estimate'}${hasSolar() && r.focusN > 1 ? ` · ${hzLabel()} avg ${fx(p50, 1)}` : ''}</span></div>
+        <div class="tile"><span class="lbl">Net P50 at the POI${hasSolar() ? ', year 1' : ''}</span><span class="val">${fx(r.en.p50, 1)} <small>GWh/yr</small></span><span class="sub">CUF ${fx(r.en.cf * 100, 1)} % · ${r.en.p50Source === 'entered' ? 'from your report' : r.en.p50Source === 'gross' ? 'your gross, less losses' : 'tool estimate'}${hasSolar() && r.focusN > 1 ? ` · ${hzLabel()} avg ${fx(p50, 1)}` : ''}</span></div>
         <div class="tile key"><span class="lbl">P90, ${hzLabel()} average</span><span class="val">${fx(pv.P90, 1)} <small>GWh/yr</small></span><span class="sub">${fx(pv.P90 / p50 * 100, 1)} % of P50</span></div>
         <div class="tile"><span class="lbl">Total uncertainty (σ)</span><span class="val">${fx(r.focus.sigma, 2)} <small>%</small></span><span class="sub">${isHybrid() ? `wind ${fx(r.focus.parts.wind.sigma, 2)} %, solar ${fx(r.focus.parts.solar.sigma, 2)} % on their own` : `${resWord()} part ${fx(r.focus.comb.wsSigma, 2)} % × S ${fx(r.en.S, 2)}`}</span></div>
         <div class="tile"><span class="lbl">P99, ${hzLabel()} average</span><span class="val">${fx(pv.P99, 1)} <small>GWh/yr</small></span><span class="sub">${fx(pv.P99 / p50 * 100, 1)} % of P50</span></div>
@@ -1059,6 +1042,7 @@
       <section class="panel"><header><h3>P-values</h3></header>${pTable()}</section>
       ${isHybrid() ? `<section class="panel"><header><h3>Wind and solar together</h3><span class="computed">${hzLabel()}</span></header>${hybridSummary()}</section>` : ''}
       ${firmSummary()}
+      <section class="panel"><header><h3>Gross to net</h3><span class="computed">${hzLabel()} average</span><button class="btn small" data-act="losscsv">Download CSV</button></header>${lossTable()}</section>
       <section class="panel"><header><h3>Where the uncertainty comes from</h3><span class="computed">share of total variance, ${hzLabel()}</span></header>${stageBars()}${legend()}</section>
       <section class="panel"><header><h3>Largest single items</h3></header>${topItems(10)}</section>
       <section class="panel"><header><h3>What the total rests on</h3></header>${mixBar(r.mix, true)}${legend()}<p>${mixText ? 'Of the variance: ' + mixText + '.' : ''} ${r.none.length ? r.none.length + ' item' + (r.none.length > 1 ? 's are' : ' is') + ' excluded.' : 'No items are excluded.'}</p></section>
@@ -1101,6 +1085,8 @@
 
 /*@@PLANTVIEW@@*/
 
+/*@@RESULTS@@*/
+
   /* ---------- events ---------- */
   function onInput(e) {
     const el = e.target;
@@ -1141,6 +1127,7 @@
     }
   }
   function onClick(e) {
+    if (e.target.closest && rrClick(e)) return;
     if (pvMode() && e.target.closest && e.target.closest('#sheet')) {
       const pc = e.target.closest('[data-pc]');
       if (pc) { e.preventDefault(); pvSelect(pc.dataset.pc); return; }
@@ -1149,13 +1136,19 @@
     }
     const t = e.target.closest('button, [data-stage]');
     if (!t) return;
-    if (t.dataset.stage) { e.preventDefault(); closeOverlay(); if (pvMode()) { pv.mode = 'steps'; savePv(); $$('.vt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.val === 'steps'))); } go(t.dataset.stage); return; }
+    if (t.dataset.stage) { e.preventDefault(); closeOverlay(); closeSheet(); if (pvMode()) { pv.mode = 'steps'; savePv(); $$('.vt button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.val === 'steps'))); } go(t.dataset.stage); return; }
     if (t.dataset.hz) {
       state.view.horizon = t.dataset.hz === 'life' ? 'life' : +t.dataset.hz; saveLocal();
       recompute(); renderStage(true); updateChrome(); return;
     }
     if (t.dataset.set) {
       const v = t.dataset.type === 'num' ? +t.dataset.val : t.dataset.type === 'bool' ? t.dataset.val === 'true' : t.dataset.val;
+      const pm = /^(energy|energyPv)\.p50Mode$/.exec(t.dataset.set);
+      if (pm) { // start a new basis from the value in use, so the results do not jump
+        const en = isHybrid() ? result[pm[1] === 'energyPv' ? 'solar' : 'wind'].en : result.en, o = state[pm[1]] = state[pm[1]] || {};
+        if (v === 'gross' && !(+o.gross > 0)) o.gross = +en.grossGWh.toFixed(1);
+        if (v === 'entered' && !(+o.p50 > 0)) o.p50 = +en.p50.toFixed(1);
+      }
       setPath(state, t.dataset.set, v);
       if (t.dataset.set === 'supply.preset') applyPreset();
       touch();
@@ -1191,6 +1184,7 @@
     if (act === 'export') { openOverlay('export'); return; }
     if (act === 'close') { closeOverlay(); return; }
     if (act === 'save') { saveCloud(); return; }
+    if (act === 'addsuite') { suiteAddCurrent(); return; }
     if (act === 'open') { openCloud(t.dataset.id); return; }
     if (act === 'del') { renderOverlay({ confirmDel: t.dataset.id }); return; }
     if (act === 'delyes') { deleteCloud(t.dataset.id); return; }
@@ -1199,6 +1193,7 @@
     if (act === 'replaceyes') { replaceProject(t.dataset.kind); return; }
     if (act === 'xlsx') { exportXlsx(); return; }
     if (act === 'json') { exportJson(); return; }
+    if (act === 'losscsv') { lossCsv(); return; }
   }
 
   /* tooltips and the power curve crosshair */
@@ -1214,6 +1209,7 @@
   }
   function hideTip() { if (tipEl) tipEl.hidden = true; const d = $('#pcDot'); if (d) d.classList.remove('on'); }
   function onPointer(e) {
+    if (rrPointer(e)) return;
     const c = e.target.closest && e.target.closest('[data-curve]');
     if (c) {
       const svg = c.ownerSVGElement, rect = svg.getBoundingClientRect();
@@ -1262,7 +1258,7 @@
     const replace = opts.confirmReplace ? `<div class="warn">This replaces the project in the editor. Save it first if you want to keep it in your projects. <div style="margin-top:8px;display:flex;gap:8px"><button class="btn small primary" data-act="replaceyes" data-kind="${opts.confirmReplace}">${{ 'new-wind': 'Start new wind project', 'new-solar': 'Start new solar project', 'new-hybrid': 'Start new hybrid project', 'example-wind': 'Load wind example', 'example-solar': 'Load solar example', 'example-hybrid': 'Load hybrid example', 'example-bess': 'Load storage example' }[opts.confirmReplace] || 'Replace'}</button><button class="btn small" data-act="cancel">Cancel</button></div></div>` : '';
     const exportSec = `<section class="stack" style="gap:8px"><h4>Export</h4>${`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" data-act="xlsx">Excel workbook (.xlsx)</button><button class="btn" data-act="json">Project file (.json)</button></div><p class="side-note">The workbook holds the P-values, the full uncertainty register with its category labels and losses, the inputs, and the sources.</p>`}</section>`;
     const projSec = `<section class="stack" style="gap:8px"><h4>My projects</h4>
-        ${`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span></div>
+        ${`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="save">Save “${esc(state.meta.name || 'Untitled')}”</button><span class="status" id="cloudStatus">${esc(cloud.status)}</span>${suiteAddHtml()}</div>
           <div class="plist">${list || '<p class="side-note">No saved projects yet.</p>'}</div>
           <p class="side-note">Projects are saved in this browser on this device, and nothing is sent anywhere. To move a project to another device or share it, export it as a project file and import it there.</p>`}
       </section>
@@ -1280,6 +1276,7 @@
 
   function replaceProject(kind) {
     const [what, t] = String(kind || 'new-wind').split('-');
+    suiteDetach(true);
     state = what === 'new' ? Lb.blankProject(t) : t === 'solar' ? Lb.solarExampleProject() : t === 'hybrid' ? Lb.hybridExampleProject() : t === 'bess' ? Lb.bessExampleProject() : Lb.exampleProject();
     firm.res = null; firm.drivers = null; firm.central = null;
     pv.view = null; pv.sel = null; pv.open.clear(); savePv();
@@ -1322,6 +1319,7 @@
   function openCloud(id) {
     const b = readProjects()[id];
     if (!b || !b.project) { refreshList(); renderOverlay({ status: 'That project is no longer there.' }); return; }
+    suiteDetach(true);
     try {
       state = Lb.normalise(b.project); state.meta.id = id;
       cloud.savedStamp = state.meta.updated; mc = null; stage = 'project'; saveLocal(); pv.view = null; pv.sel = null; pv.open.clear();
@@ -1340,6 +1338,7 @@
       try {
         const o = JSON.parse(fr.result);
         if (!o || !o.plant || !o.items) throw new Error('not a project');
+        suiteDetach(true);
         state = Lb.normalise(o); if (!state.meta.id) state.meta.id = uid();
         mc = null; cloud.savedStamp = null; stage = 'project'; touch(); pv.view = null; pv.sel = null; pv.open.clear();
         recompute(); renderStage(); updateChrome(); renderOverlay({ status: `Imported “${state.meta.name}”.` });
@@ -1392,6 +1391,16 @@
       reg.push([COMP_LABEL[it.comp] || (isSolar() ? 'Solar' : 'Wind'), stageOrderName(it.stage), it.name, it.deviceName || '', it.cat, it.sub, E.IEC_BASIS[it.mode], TIER[it.tier].label, it.domain === 'ws' ? 'wind speed' : it.domain === 'res' ? 'irradiance' : it.domain === 'en' ? 'energy' : 'loss', it.domain === 'loss' ? +it.L.toFixed(3) : '', +it.sigma.toFixed(4), it.iav ? +it.iav.toFixed(3) : '', +ens.toFixed(4), contrib[it.key] ? +(contrib[it.key].share * 100).toFixed(2) : '', (it.def.src || []).map(k => Lb.SOURCES[k] && Lb.SOURCES[k].t).filter(Boolean).join('; ')]);
     });
     X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(reg), 'Register');
+    // gross to net at the period on screen: every loss, the energy it takes and what is left
+    {
+      const b = E.lossBridge(r, r.focusN);
+      const rows = [['Gross to net, ' + hzLabel() + ' average (GWh/yr)'], ['Plant', 'Group', 'Loss', 'Evidence', 'Loss (%)', 'σ (pts)', 'Yearly variability (pts)', 'Energy lost (GWh/yr)', 'Energy left (GWh/yr)']];
+      b.sources.forEach(x => rows.push([COMP_LABEL[x.comp] || '', x.name, '', '', '', '', '', '', +x.gross.toFixed(3)]));
+      b.steps.forEach(x => rows.push([COMP_LABEL[x.comp] || '', x.groupName, x.name, TIER[x.tier] ? TIER[x.tier].label : '', +x.L.toFixed(3), +x.s.toFixed(3), +x.iav.toFixed(3), +x.lost.toFixed(3), +x.after.toFixed(3)]));
+      rows.push(['', 'Net at the meter', '', '', +b.lossPct.toFixed(3), +b.lossSigma.toFixed(3), '', +(b.gross - b.net).toFixed(3), +b.net.toFixed(3)]);
+      if (b.implied) rows.push([], ['Gross is worked back from the entered P50 and the losses.']);
+      X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(rows), 'Gross to net');
+    }
     // the plant view's breakdown: each part and category, its energy σ and share of the total
     {
       const sm = Plant.summarise(state, r, E, Lb), hyb = isHybrid();
@@ -1440,6 +1449,166 @@
     offerFile(slug(state.meta.name) + '-uncertainty.xlsx', new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   }
 
+  /* ---------- suite project (optional): WattOdds in the project bar, shared with the other tools ----------
+     Reads the lossstack and windnudge/solarnudge sections, writes its own wattodds section.
+     Upstream changes are offered with Apply, never applied silently. Without a suite project nothing here runs. */
+  const SUITE_NUDGE = { wind: 'windnudge', solar: 'solarnudge' };
+  const SUITE_NUDGE_LABEL = { windnudge: 'WindNudge', solarnudge: 'SolarNudge' };
+  let suiteProj = null;   // the suite project this page is editing, or null
+  let suiteApplied = {};  // upstream section revisions this project was built from
+  let suiteRev = null;    // wattodds section revision last written by this page
+  let suiteTimer = 0, suiteHold = false;
+
+  function suiteClear() { clearTimeout(suiteTimer); suiteTimer = 0; suiteProj = null; suiteApplied = {}; suiteRev = null; }
+  // Leave the suite project; the working state stays as it is. With toHub, the bar shows no project too.
+  function suiteDetach(toHub) {
+    const was = suiteProj;
+    suiteClear();
+    if (was && toHub && window.CRSuite) CRSuite.open(null).catch(() => {});
+  }
+  function suiteSchedule() {
+    if (!suiteProj || suiteHold) return;
+    clearTimeout(suiteTimer);
+    suiteTimer = setTimeout(suiteFlush, 800);
+  }
+  function suiteFlush() {
+    suiteTimer = 0;
+    if (!suiteProj || suiteHold || !window.CRSuite) return;
+    const id = suiteProj.id;
+    const f = !isHybrid() && result && result.H ? result.H[1] : null;
+    const summary = f ? { p50GWh: f.p50, p90GWh: f.pv.P90, sigmaPct: f.sigma, horizon: 1 } : null;
+    CRSuite.write('wattodds', { project: clone(state), summary, appliedFrom: suiteApplied }).then(
+      res => { if (suiteProj && suiteProj.id === id) suiteRev = res.sectionRev; },
+      () => CRSuite.notice('This change could not be saved to the project.'));
+  }
+  // lossstack: the WattOdds project LossStack built. Only loss and storage items come across, plus energy and plant.
+  function applyLossStack(section) {
+    const p = section.value && section.value.wattoddsProject;
+    if (!p || typeof p !== 'object') return;
+    Object.keys(p.items || {}).forEach(id => {
+      const d = Lb.ITEM_BY_ID[id];
+      if (!d || (d.domain !== 'loss' && d.domain !== 'bess')) return;
+      state.items[id] = Object.assign({}, state.items[id], p.items[id]);
+    });
+    if (p.energy && typeof p.energy === 'object') Object.assign(state.energy, p.energy);
+    if (p.pv && typeof p.pv === 'object') state.pv = Object.assign(state.pv || {}, p.pv);
+    if (p.plant && p.plant.nTurbines) {
+      state.plant.nTurbines = p.plant.nTurbines;
+      if (p.plant.ratedMW) state.plant.ratedMW = p.plant.ratedMW;
+    }
+    suiteApplied.lossstack = section.rev;
+  }
+  // windnudge / solarnudge: the sensitivity, wind climate, rating, air density and shear that the Nudge measured.
+  function applyNudge(section, tool) {
+    const x = section.value && section.value.export;
+    if (!x || typeof x !== 'object') return;
+    const num = v => (typeof v === 'number' && isFinite(v) ? v : null);
+    const set = (obj, key, v) => { if (v !== null) obj[key] = v; };
+    if (tool === 'windnudge') {
+      const site = x.site || {}, tur = x.turbine || {}, base = x.base || {};
+      const sens = num(x.speed_to_aep_ratio);
+      if (sens !== null && sens > 0) { state.energy.sensMode = 'entered'; state.energy.sens = sens; }
+      set(state.climate, 'meanWs', num(base.hub_speed_ms));
+      set(state.plant, 'hubH', num(site.hub_height_m));
+      const rated = num(tur.rated_kw);
+      if (rated !== null && rated > 0) state.plant.ratedMW = rated / 1000;
+      set(state.plant, 'rotorD', num(tur.rotor_diameter_m));
+      const rho = num(site.air_density_kgm3);
+      if (rho !== null && rho > 0) { state.site.rhoMode = 'entered'; state.site.rho = rho; }
+      set(state.vertical, 'hMeas', num(site.measurement_height_m));
+      set(state.vertical, 'alpha', num(site.shear_alpha));
+    } else if (tool === 'solarnudge') {
+      const r = num(x.irradiance_to_energy_ratio);
+      if (r !== null && r > 0) { state.energy.sensMode = 'entered'; state.energy.sens = r; }
+    }
+    suiteApplied[tool] = section.rev;
+  }
+  function reopenSuite() {
+    mc = null; stage = 'project'; saveLocal(); pv.view = null; pv.sel = null; pv.open.clear();
+    recompute(); renderStage(); updateChrome();
+  }
+  // Start working on a suite project. Its own wattodds section wins; otherwise build one from the upstream sections.
+  function suiteAdopt(p) {
+    suiteClear();
+    suiteProj = p;
+    const ws = p.sections && p.sections.wattodds;
+    const own = !!(ws && ws.value && ws.value.project);
+    if (own) {
+      state = Lb.normalise(ws.value.project);
+      suiteApplied = Object.assign({}, ws.value.appliedFrom || {});
+      suiteRev = ws.rev;
+    } else {
+      state = Lb.blankProject(p.tech);
+      const ls = p.sections && p.sections.lossstack;
+      if (ls) applyLossStack(ls);
+      const nk = SUITE_NUDGE[p.tech], nu = nk && p.sections && p.sections[nk];
+      if (nu) applyNudge(nu, nk);
+    }
+    state.meta.id = p.id; state.meta.name = p.name;
+    if (!own) suiteSchedule();
+    reopenSuite();
+    if (own) suiteNotices(p);
+  }
+  function suiteNotices(p) {
+    if (!suiteProj || suiteProj.id !== p.id) return;
+    const ls = p.sections && p.sections.lossstack;
+    if (ls && ls.rev > (suiteApplied.lossstack || 0)) suiteOffer('lossstack', 'LossStack has new losses for this project.');
+    const nk = SUITE_NUDGE[p.tech], nu = nk && p.sections && p.sections[nk];
+    if (nu && nu.rev > (suiteApplied[nk] || 0)) suiteOffer(nk, SUITE_NUDGE_LABEL[nk] + ' has new results for this project.');
+  }
+  function suiteOffer(name, text) {
+    CRSuite.notice(text, { action: 'Apply', onAction: () => suiteApply(name) });
+  }
+  function suiteApply(name) {
+    const id = suiteProj && suiteProj.id;
+    if (!id) return;
+    CRSuite.current().then(p => {
+      if (!p || p.id !== id || !suiteProj) return;
+      const sec = p.sections && p.sections[name];
+      if (!sec) return;
+      if (name === 'lossstack') applyLossStack(sec); else applyNudge(sec, name);
+      suiteProj = p;
+      touch(); recompute(); renderStage(); updateChrome();
+    }).catch(() => CRSuite.notice('Could not read the project. Try again.'));
+  }
+  function onSuiteChange(e) {
+    if (suiteHold) return;
+    const p = e.project;
+    if (!p) { if (suiteProj) suiteClear(); return; }
+    if (!suiteProj || p.id !== suiteProj.id) { suiteAdopt(p); return; }
+    suiteProj = p;
+    if (p.name && state.meta.name !== p.name) { state.meta.name = p.name; saveLocal(); updateChrome(); }
+    if (!e.own) suiteNotices(p);
+  }
+  function suiteAddHtml() {
+    if (!window.CRSuite) return '';
+    if (suiteProj) return `<span class="side-note">In the project bar as “${esc(suiteProj.name)}”.</span>`;
+    return '<button class="btn" data-act="addsuite">Add to suite</button>';
+  }
+  // Add the project in front of the user to the suite. Its current state is kept, not replaced by a blank one.
+  function suiteAddCurrent() {
+    if (!window.CRSuite || suiteProj) return;
+    suiteHold = true;
+    CRSuite.create({ name: state.meta.name || 'Untitled project', tech: ptech() }).then(p => {
+      suiteHold = false;
+      suiteProj = p; suiteApplied = {}; suiteRev = null;
+      state.meta.id = p.id; state.meta.name = p.name;
+      touch(); updateChrome();
+      if (overlay) renderOverlay({ status: `Added “${p.name}” to the suite.` });
+    }).catch(() => {
+      suiteHold = false;
+      if (overlay) renderOverlay({ status: 'Could not add the project to the suite. Check that browser storage is not blocked.' });
+    });
+  }
+  function startSuite() {
+    if (!window.CRSuite) return;
+    try {
+      CRSuite.mountBar({ tool: 'wattodds', after: document.querySelector('header.top') });
+      CRSuite.onChange(onSuiteChange);
+      CRSuite.ready.then(() => CRSuite.current()).then(p => { if (p) suiteAdopt(p); }).catch(() => {});
+    } catch (e) { /* WattOdds works without the suite */ }
+  }
+
   /* ---------- boot ---------- */
   function start() {
     const saved = loadLocal();
@@ -1453,8 +1622,9 @@
     document.addEventListener('click', onClick);
     document.addEventListener('pointermove', onPointer);
     document.addEventListener('pointerleave', hideTip);
-    document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (overlay) { closeOverlay(); return; } if (pvMode() && pv.sel) { pv.sel = null; pv.hot = null; pv.open.clear(); pv.full = false; savePv(); renderPlant(true); } });
+    document.addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (overlay) { closeOverlay(); return; } if (rr.sheet) { closeSheet(); return; } if (pvMode() && pv.sel) { pv.sel = null; pv.hot = null; pv.open.clear(); pv.full = false; savePv(); renderPlant(true); } });
     initCaps();
   }
   start();
+  if (document.readyState === 'complete') startSuite(); else window.addEventListener('load', startSuite);
 })();

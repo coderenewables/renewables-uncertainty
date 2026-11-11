@@ -1,11 +1,11 @@
-const { chromium } = require('/opt/npm-tools/node_modules/playwright');
+const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const OUT = process.argv[2];
 const body = fs.readFileSync(path.join(__dirname, '../dist/wind-energy-uncertainty.html'), 'utf8');
 const page = `<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>${body}</body></html>`;
 const file = path.join(OUT, 'harness.html'); fs.writeFileSync(file, page);
 (async () => {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch();
   const errors = [];
   async function run(name, vp, scheme, fn) {
     const ctx = await browser.newContext({ viewport: vp, colorScheme: scheme, deviceScaleFactor: 1 });
@@ -31,10 +31,10 @@ const file = path.join(OUT, 'harness.html'); fs.writeFileSync(file, page);
     await p.click('.stage-btn[data-stage="measurement"]'); await p.waitForTimeout(100);
     await p.screenshot({ path: path.join(OUT, 'd-measurement.png'), fullPage: false });
     // typing updates live values
-    const before = await p.textContent('.side .big');
+    const before = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     await p.fill('input[data-path="devices.0.items.cup_cal.inputs.calExp"]', '3');
     await p.waitForTimeout(150);
-    const after = await p.textContent('.side .big');
+    const after = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     if (before === after) errors.push('live update did not change P90');
     // add a lidar, switch a mode, switch to desktop data
     await p.click('button[data-act="adddev"][data-type="lidar"]'); await p.waitForTimeout(80);
@@ -69,10 +69,10 @@ const file = path.join(OUT, 'harness.html'); fs.writeFileSync(file, page);
     if (!/solar/i.test(name)) errors.push('solar example did not load: ' + name);
     await p.click('.stage-btn[data-stage="pvconv"]'); await p.waitForTimeout(80);
     await p.screenshot({ path: path.join(OUT, 's-pvconv.png'), fullPage: false });
-    const before = await p.textContent('.side .big');
+    const before = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     await p.click('button[data-mode="items.temperature"][data-val="entered"]'); await p.waitForTimeout(60);
     await p.fill('input[data-path="items.temperature.entered.s"]', '4'); await p.waitForTimeout(150);
-    const after = await p.textContent('.side .big');
+    const after = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     if (before === after) errors.push('solar live update did not change P90');
     await p.click('.stage-btn[data-stage="project"]'); await p.waitForTimeout(60);
     await p.click('button[data-set="setup.solarSource"][data-val="adapted"]'); await p.waitForTimeout(60);
@@ -116,15 +116,15 @@ const file = path.join(OUT, 'harness.html'); fs.writeFileSync(file, page);
     if (await p.$('#it-cur_grid')) errors.push('grid curtailment shown under solar losses in hybrid');
     await p.click('.stage-btn[data-stage="hybrid"]'); await p.waitForTimeout(60);
     if (!(await p.$('#it-hy_export_limit')) || !(await p.$('#it-av_grid'))) errors.push('shared items missing from Shared connection');
-    const before = await p.textContent('.side .big');
+    const before = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     await p.fill('input[data-path="hybrid.rhoIav"]', '0.8'); await p.waitForTimeout(150);
-    const after = await p.textContent('.side .big');
+    const after = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     if (before === after) errors.push('hybrid correlation did not change P90');
     await p.screenshot({ path: path.join(OUT, 'h-hybrid.png'), fullPage: false });
     await p.click('.stage-btn[data-stage="pvconv"]'); await p.waitForTimeout(60);
     await p.click('button[data-mode="items.temperature"][data-val="entered"]'); await p.waitForTimeout(60);
     await p.fill('input[data-path="items.temperature.entered.s"]', '3'); await p.waitForTimeout(120);
-    const after2 = await p.textContent('.side .big');
+    const after2 = await p.$eval('#side [data-n="p90"]', e => e.dataset.v);
     if (after2 === after) errors.push('hybrid solar item did not change P90');
     await p.click('.stage-btn[data-stage="results"]'); await p.waitForTimeout(80);
     await p.click('button[data-act="mc"]'); await p.waitForTimeout(2500);
