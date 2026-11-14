@@ -519,7 +519,7 @@
       <div class="stack" data-live="pvsum|">${pvSummaryLive()}</div>
       ${isHybrid() && v === 'site' ? `<details class="pv-setup" data-sk="hybsum"${skOpen('hybsum')}><summary>Wind and solar together</summary><div class="pv-setup-in" data-live="hybsum|">${hybridSummary()}</div></details>` : ''}
       ${!farm ? `<details class="pv-setup" data-sk="project"${skOpen('project', true)}><summary>Project set-up <span>${esc(lifeN() + '-year life' + (hasBess() ? ' · battery' : ''))}</span></summary><div class="pv-setup-in">
-        <div class="grid2">${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div>
+        <div class="grid2">${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div>${riEntryHtml()}
         <div class="grid2">${numField({ path: 'horizon.life', label: 'Project lifetime', unit: 'years', step: 1, min: 1, rerender: true })}</div>
         ${segField({ path: 'bess.enabled', label: 'Battery and firm supply', type: 'bool', options: [['false', 'No'], ['true', 'Yes']] })}</div></details>` : ''}
       <div class="insp-actions"><button class="btn" data-act="mode" data-val="steps">Step-by-step view</button></div>

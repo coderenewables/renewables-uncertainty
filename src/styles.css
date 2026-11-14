@@ -683,3 +683,22 @@ button.br-row:hover { background: var(--sunk); }
   body.rr-open .rr-close { display: inline-flex; }
   body.rr-open .bottombar { display: none; }
 }
+/* ---------- import from a report ---------- */
+.sheet-panel.wide { width: min(1120px, 100%); }
+table.t.ri-t th, table.t.ri-t td { text-align: left; white-space: normal; vertical-align: top; }
+table.t.ri-t td { font-family: var(--f-body); min-width: 110px; }
+table.t.ri-t td.ri-use { min-width: 0; width: 44px; }
+.ri-t input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); vertical-align: middle; }
+.ri-t tr.ri-off td { color: var(--ink-3); }
+.ri-q { display: block; font-size: 0.78rem; color: var(--ink-2); margin-top: 3px; overflow-wrap: anywhere; }
+.ri-m { font-size: 0.78rem; color: var(--warn-ink); margin-top: 4px; }
+.ri-m.err { color: var(--crit); }
+.ri-val { max-width: 150px; }
+.ri-ev { font-size: 0.8rem; color: var(--ink-2); border-left: 3px solid var(--ev-site); padding: 2px 0 2px 10px; overflow-wrap: anywhere; }
+.ri-entry { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+@media (max-width: 760px) {
+  .ri-t thead { display: none; }
+  table.t.ri-t tr { display: block; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+  table.t.ri-t td { display: block; padding: 3px 0; border: 0; min-width: 0; width: auto; }
+  table.t.ri-t td[data-th]::before { content: attr(data-th); display: block; font-size: 0.72rem; font-weight: 700; color: var(--ink-3); }
+}
