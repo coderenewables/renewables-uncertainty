@@ -1,0 +1,30 @@
+{
+  "schema": "wattodds.report-import/1",
+  "report": { "title": "PV Yield Assessment, Thar Plains Solar Park (fictional)", "author": "Example Solar Advisory", "date": "2026-05-02", "technology": "solar" },
+  "project": {
+    "dc_capacity_mwp": { "value": 195, "page": 4, "quote": "195 MWp DC / 150 MW AC, single-axis trackers, bifacial modules" },
+    "ac_capacity_mw": { "value": 150, "page": 4, "quote": "195 MWp DC / 150 MW AC, single-axis trackers, bifacial modules" },
+    "mounting": { "value": "tracker", "page": 4, "quote": "195 MWp DC / 150 MW AC, single-axis trackers, bifacial modules" },
+    "bifacial": { "value": true, "page": 4, "quote": "195 MWp DC / 150 MW AC, single-axis trackers, bifacial modules" },
+    "ghi_kwh_m2": { "value": 1968, "page": 12, "quote": "Long-term GHI 1968 kWh/m2 per year" },
+    "net_p50_gwh": { "value": 371.2, "page": 3, "quote": "P50 energy yield, first year: 371.2 GWh" },
+    "lifetime_years": { "value": 25, "page": 3, "quote": "25-year project life" }
+  },
+  "items": [
+    { "id": "sat_model", "device": null, "covers": [], "label": "Solar resource (GHI)", "quantity": "uncertainty", "value": 3.5, "unit": "%", "percent_of": "irradiance", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 29, "quote": "Solar resource (GHI) 3.5%" }, "confidence": "high", "notes": null },
+    { "id": "ghi_iav", "device": null, "covers": [], "label": "Inter-annual variability", "quantity": "uncertainty", "value": 2.3, "unit": "%", "percent_of": "irradiance", "level": "standard", "stated_as": null, "period_years": 1, "evidence": { "page": 29, "quote": "Inter-annual variability of GHI (single year) 2.3%" }, "confidence": "high", "notes": null },
+    { "id": "transposition", "device": null, "covers": [], "label": "Transposition to plane of array", "quantity": "uncertainty", "value": 2.0, "unit": "%", "percent_of": "irradiance", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 29, "quote": "Transposition to plane of array 2.0%" }, "confidence": "high", "notes": null },
+    { "id": "model_chain", "device": null, "covers": [], "label": "PV simulation model", "quantity": "uncertainty", "value": 4.0, "unit": "%", "percent_of": "energy", "level": "k2", "stated_as": null, "period_years": null, "evidence": { "page": 29, "quote": "PV simulation model 4.0% (95% confidence)" }, "confidence": "medium", "notes": "Stated at 95 % confidence." },
+    { "id": "bifacial", "device": null, "covers": [], "label": "Bifacial gain", "quantity": "loss", "value": 5.8, "unit": "%", "percent_of": null, "level": null, "stated_as": "gain", "period_years": null, "evidence": { "page": 24, "quote": "Bifacial gain +5.8%" }, "confidence": "high", "notes": null },
+    { "id": "soiling", "device": null, "covers": [], "label": "Soiling loss", "quantity": "loss", "value": -3.0, "unit": "%", "percent_of": null, "level": null, "stated_as": "loss", "period_years": null, "evidence": { "page": 24, "quote": "Soiling loss -3.0%" }, "confidence": "high", "notes": "Loss diagram writes losses as negative numbers." },
+    { "id": "soiling", "device": null, "covers": [], "label": "Soiling uncertainty", "quantity": "uncertainty", "value": 1.0, "unit": "%", "percent_of": "loss_points", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 29, "quote": "Soiling 3.0% +/- 1.0%" }, "confidence": "high", "notes": null },
+    { "id": "temperature", "device": null, "covers": [], "label": "Module temperature loss", "quantity": "loss", "value": -7.4, "unit": "%", "percent_of": null, "level": null, "stated_as": "loss", "period_years": null, "evidence": { "page": 24, "quote": "PV loss due to temperature -7.4%" }, "confidence": "high", "notes": null },
+    { "id": "inverter", "device": null, "covers": [], "label": "Inverter efficiency", "quantity": "loss", "value": 0.984, "unit": "fraction", "percent_of": null, "level": null, "stated_as": "efficiency", "period_years": null, "evidence": { "page": 25, "quote": "Inverter efficiency factor 0.984" }, "confidence": "high", "notes": null },
+    { "id": "clipping", "device": null, "covers": [], "label": "Inverter clipping", "quantity": "loss", "value": -1.9, "unit": "%", "percent_of": null, "level": null, "stated_as": "loss", "period_years": null, "evidence": { "page": 25, "quote": "Inverter loss over nominal power -1.9%" }, "confidence": "high", "notes": null },
+    { "id": "pv_avail", "device": null, "covers": [], "label": "Plant availability", "quantity": "loss", "value": 99.0, "unit": "%", "percent_of": null, "level": null, "stated_as": "efficiency", "period_years": null, "evidence": { "page": 26, "quote": "Plant availability 99.0%" }, "confidence": "high", "notes": null },
+    { "id": "degradation", "device": null, "covers": [], "label": "Annual module degradation", "quantity": "loss", "value": 0.45, "unit": "%/yr", "percent_of": null, "level": null, "stated_as": "loss", "period_years": null, "evidence": { "page": 27, "quote": "Module degradation 0.45% per year" }, "confidence": "high", "notes": null }
+  ],
+  "unmapped": [
+    { "label": "Total uncertainty of the first-year yield", "quantity": "uncertainty", "value": 6.4, "unit": "%", "percent_of": "energy", "level": "standard", "stated_as": null, "period_years": 1, "evidence": { "page": 30, "quote": "Combined uncertainty, year 1: 6.4%" }, "confidence": "high", "notes": null, "reason": "A total, not an item." }
+  ]
+}

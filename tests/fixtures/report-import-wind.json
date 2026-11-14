@@ -1,0 +1,33 @@
+{
+  "schema": "wattodds.report-import/1",
+  "report": { "title": "Energy Yield Assessment, Kaveri Ridge Wind Farm (fictional)", "author": "Example Wind Consulting", "date": "2026-03-18", "technology": "wind" },
+  "project": {
+    "turbine_count": { "value": 28, "page": 6, "quote": "28 x 3.3 MW turbines, 156 m rotor, 140 m hub height" },
+    "turbine_rated_mw": { "value": 3.3, "page": 6, "quote": "28 x 3.3 MW turbines, 156 m rotor, 140 m hub height" },
+    "rotor_diameter_m": { "value": 156, "page": 6, "quote": "28 x 3.3 MW turbines, 156 m rotor, 140 m hub height" },
+    "hub_height_m": { "value": 140, "page": 6, "quote": "28 x 3.3 MW turbines, 156 m rotor, 140 m hub height" },
+    "mean_wind_speed_ms": { "value": 6.8, "page": 21, "quote": "Long-term mean wind speed at hub height, average of turbine locations: 6.8 m/s" },
+    "weibull_k": null,
+    "air_density_kgm3": { "value": 1.11, "page": 22, "quote": "Site air density at hub height 1.11 kg/m3" },
+    "wind_sensitivity": { "value": 1.95, "page": 44, "quote": "Sensitivity ratio (energy / wind speed): 1.95" },
+    "net_p50_gwh": { "value": 291.4, "page": 5, "quote": "Net energy P50: 291.4 GWh/yr" },
+    "lifetime_years": { "value": 25, "page": 5, "quote": "Evaluation period: 25 years" }
+  },
+  "items": [
+    { "id": "cup_cal", "device": 1, "covers": ["cup_op", "cup_mount", "cup_daq", "mast_integrity"], "label": "Wind speed measurement, mast M1", "quantity": "uncertainty", "value": 2.4, "unit": "%", "percent_of": "wind_speed", "level": "k2", "stated_as": null, "period_years": null, "evidence": { "page": 43, "quote": "Wind speed measurement (M1) 2.4% (k=2)" }, "confidence": "high", "notes": "One figure for all mast measurement terms." },
+    { "id": "mcp", "device": null, "covers": ["ref_consistency", "lt_period", "ws_dist", "synthesis"], "label": "Long-term wind resource", "quantity": "uncertainty", "value": 2.1, "unit": "%", "percent_of": "wind_speed", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 43, "quote": "Long-term wind resource 2.1%" }, "confidence": "high", "notes": null },
+    { "id": "vert_model", "device": null, "covers": ["vert_prop", "vert_repr"], "label": "Vertical extrapolation", "quantity": "uncertainty", "value": 1.0, "unit": "%", "percent_of": "wind_speed", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 43, "quote": "Vertical extrapolation 1.0%" }, "confidence": "high", "notes": null },
+    { "id": "horiz_approp", "device": null, "covers": ["horiz_inputs", "horiz_sens"], "label": "Horizontal extrapolation (flow modelling)", "quantity": "uncertainty", "value": 3.0, "unit": "%", "percent_of": "wind_speed", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 43, "quote": "Horizontal extrapolation 3.0%" }, "confidence": "high", "notes": null },
+    { "id": "ws_iav", "device": null, "covers": [], "label": "Inter-annual variability of wind speed", "quantity": "uncertainty", "value": 4.2, "unit": "%", "percent_of": "wind_speed", "level": "standard", "stated_as": null, "period_years": 1, "evidence": { "page": 44, "quote": "Inter-annual variability (1 year) 4.2% of wind speed" }, "confidence": "high", "notes": null },
+    { "id": "pc_unc", "device": null, "covers": [], "label": "Power curve", "quantity": "uncertainty", "value": 2.5, "unit": "%", "percent_of": "energy", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 44, "quote": "Power curve 2.5% of energy" }, "confidence": "high", "notes": null },
+    { "id": "wake_int", "device": null, "covers": [], "label": "Internal wake effect", "quantity": "loss", "value": 90.2, "unit": "%", "percent_of": null, "level": null, "stated_as": "efficiency", "period_years": null, "evidence": { "page": 37, "quote": "Internal wake effect 90.2%" }, "confidence": "high", "notes": "Loss table lists efficiencies." },
+    { "id": "wake_int", "device": null, "covers": [], "label": "Wake modelling uncertainty", "quantity": "uncertainty", "value": 20, "unit": "%", "percent_of": "relative_to_loss", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 44, "quote": "Wake modelling: 20% of the wake loss" }, "confidence": "medium", "notes": null },
+    { "id": "av_wtg", "device": null, "covers": [], "label": "Turbine availability", "quantity": "loss", "value": 97.0, "unit": "%", "percent_of": null, "level": null, "stated_as": "efficiency", "period_years": null, "evidence": { "page": 37, "quote": "Turbine availability 97.0%" }, "confidence": "high", "notes": null },
+    { "id": "el_eff", "device": null, "covers": [], "label": "Electrical efficiency", "quantity": "loss", "value": 97.9, "unit": "%", "percent_of": null, "level": null, "stated_as": "efficiency", "period_years": null, "evidence": { "page": 37, "quote": "Electrical efficiency 97.9%" }, "confidence": "high", "notes": null },
+    { "id": "cur_grid", "device": null, "covers": [], "label": "Grid curtailment", "quantity": "loss", "value": 1.5, "unit": "%", "percent_of": null, "level": null, "stated_as": "loss", "period_years": null, "evidence": { "page": 38, "quote": "Grid curtailment: a loss of 1.5% is assumed" }, "confidence": "high", "notes": null }
+  ],
+  "unmapped": [
+    { "label": "Plant performance and loss uncertainty", "quantity": "uncertainty", "value": 3.0, "unit": "%", "percent_of": "energy", "level": "standard", "stated_as": null, "period_years": null, "evidence": { "page": 44, "quote": "Plant performance and losses 3.0% of energy" }, "confidence": "high", "notes": null, "reason": "One figure for the uncertainty of all losses; no single item holds it." },
+    { "label": "Total uncertainty, 10-year", "quantity": "uncertainty", "value": 8.1, "unit": "%", "percent_of": "energy", "level": "standard", "stated_as": null, "period_years": 10, "evidence": { "page": 45, "quote": "Total uncertainty (10-year) 8.1%" }, "confidence": "high", "notes": null, "reason": "A total, not an item." }
+  ]
+}
