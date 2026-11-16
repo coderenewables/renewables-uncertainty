@@ -18,6 +18,7 @@ It runs entirely in the browser: one self-contained HTML page (HTML + JavaScript
 - **Battery and firm supply:** hourly simulation of plant + battery against supply rules (e.g. SECI FDRE), with a Monte Carlo over operating years, shortfall, penalty and the drivers of risk. It reruns after each change, so delivered energy, battery losses and the chance of meeting the rules stay current.
 - **Checks on the inputs:** capacity factors, performance ratios, plane-of-array ratios and clipping that do not fit the plant are flagged, with a link to the part concerned.
 - **Exports:** Excel workbook (summary, uncertainty register, gross to net, plant parts, inputs, firm supply, sources), a loss table as CSV and a JSON project file.
+- **Import from a report:** copy a prompt, run it with your consultant's report in an AI chat you are allowed to use, paste the JSON reply back, check each value against its page and quote, and apply. Nothing is sent from the page. Imported values are site values and keep their evidence.
 
 ## Layout
 
@@ -30,8 +31,10 @@ src/
   library.js     uncertainty items, defaults, explanations, sources, examples
   bess.js        hourly storage and firm-supply simulation (no DOM)
   plant.js       places every item on a plant part and category; part totals (no DOM)
+  reportimport.js  report import: schema, prompt, validation and apply (no DOM)
   plantview.js   plant drawing and inspector (inlined into ui.js at build time)
   results.js     results rail: P-values, odds curve, gross-to-net bridge, drivers, baseline (inlined into ui.js)
+  importview.js  the "Import from a report" dialog (inlined into ui.js)
   ui.js          interface
 build.py         concatenates src/ into dist/wind-energy-uncertainty.html and builds the website in dist/site/
 dist/            the built single-file page (file name kept from before the rename so existing links keep working);
@@ -56,6 +59,8 @@ coderenewables.com is deployed by GitHub Pages on every push to `main` (`.github
 node tests/engine.test.js     # analytical engine: wind, solar, hybrid, gross to net, input checks
 node tests/bess.test.js       # storage and firm supply
 node tests/plant.test.js      # plant parts add up to the total
+node tests/reportimport.test.js  # report import: extraction, validation, units, duplicates, hybrid, apply and undo
+node tests/import-ui.js <outdir>  # report import dialog in a browser
 node tests/smoke.js  <outdir>             # step-by-step view in a browser
 node tests/plant-ui.js <outdir>           # plant view in a browser
 node tests/export.js <outdir> <xlsx.full.min.js> [solar|hybrid|bess]

@@ -6,11 +6,12 @@ dist = root / 'dist'
 # 1. The app as one self-contained page fragment (no document skeleton; step 2
 #    wraps it for the website).
 html = (src / 'index.html').read_text()
-for tag, f in [('CSS', 'styles.css'), ('ENGINE', 'engine.js'), ('LIBRARY', 'library.js'), ('BESS', 'bess.js'), ('PLANT', 'plant.js'), ('UI', 'ui.js')]:
+for tag, f in [('CSS', 'styles.css'), ('ENGINE', 'engine.js'), ('LIBRARY', 'library.js'), ('BESS', 'bess.js'), ('PLANT', 'plant.js'), ('REPORTIMPORT', 'reportimport.js'), ('UI', 'ui.js')]:
     body = (src / f).read_text()
     if f == 'ui.js':
         body = body.replace('/*@@PLANTVIEW@@*/', (src / 'plantview.js').read_text())
         body = body.replace('/*@@RESULTS@@*/', (src / 'results.js').read_text())
+        body = body.replace('/*@@IMPORTVIEW@@*/', (src / 'importview.js').read_text())
     assert '</script' not in body.lower() or f.endswith('.css'), f
     html = html.replace(f'/*@@{tag}@@*/', body)
 out = dist / 'wind-energy-uncertainty.html'

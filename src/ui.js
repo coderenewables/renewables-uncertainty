@@ -303,6 +303,7 @@
       body = `<p class="note">Excluded from the total. Keep this only if the item really does not apply to your project.</p>`;
     }
     const info = def.info || {};
+    const evLine = ReportImport.evidenceLine(st);
     return `<section class="item ${mode === 'none' ? 'off' : ''}" id="it-${esc(key)}">
       <div class="item-head">
         <div class="item-title"><h3>${esc(def.name)}</h3><code>${esc(def.cat)} / ${esc(def.sub)}</code></div>
@@ -310,6 +311,7 @@
       </div>
       <div class="modes" role="group" aria-label="How to set this item">${modes.map(m => `<button data-mode="${path}" data-key="${esc(key)}" data-val="${m}" aria-pressed="${mode === m}">${MODE_LABEL[m]}</button>`).join('')}</div>
       ${body}
+      ${evLine ? `<p class="ri-ev"><b>From a report.</b> ${esc(evLine)}</p>` : ''}
       ${def.note ? `<p class="formula">${esc(def.note)}</p>` : ''}
       <details class="about"><summary>What this is and how to reduce it</summary><div class="about-body">
         ${info.what ? `<p><b>What it is.</b> ${esc(info.what)}</p>` : ''}
@@ -354,7 +356,7 @@
   }
   const exampleWarn = () => (state.meta.example ? `<p class="warn">These are example values for a fictional project so you can see the tool working. Replace them with your own, or start a new project from Projects.</p>` : '');
   const projectPanel = () => `<section class="panel"><header><h3>Project</h3></header><div class="grid2">
-        ${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div></section>`;
+        ${txtField({ path: 'meta.name', label: 'Project name' })}${txtField({ path: 'meta.site', label: 'Site or notes' })}</div>${riEntryHtml()}</section>`;
   const storagePanel = () => `<section class="panel"><header><h3>Battery storage and firm supply</h3></header>
       ${segField({ path: 'bess.enabled', label: 'Add a battery and check a supply obligation?', type: 'bool', options: [['false', 'No'], ['true', 'Yes']], hint: hasBess() ? 'Two stages are added: Battery storage and Firm supply. They run an hourly simulation of the plant and battery against a demand profile.' : 'Adds an hourly simulation of plant and battery against a demand profile such as an FDRE or round-the-clock contract.' })}</section>`;
   const evalPanel = hint => `${storagePanel()}<section class="panel"><header><h3>Evaluation period</h3></header><div class="grid2">
@@ -1087,9 +1089,12 @@
 
 /*@@RESULTS@@*/
 
+/*@@IMPORTVIEW@@*/
+
   /* ---------- events ---------- */
   function onInput(e) {
     const el = e.target;
+    if (riInput(e)) return;
     if (!el.dataset || !el.dataset.path) return;
     if (!pvMode() && el.closest('#sheet') && (stage === 'results') && el.tagName === 'INPUT' && e.type === 'input') return; // results inputs apply on change
     if (el.dataset.kind === 'text') {
@@ -1108,6 +1113,7 @@
   }
   function onChange(e) {
     const el = e.target;
+    if (riChange(e)) return;
     if (el.matches('input[type=radio][data-choice]')) {
       setPath(state, el.dataset.choice + '.choice', +el.value);
       touch(); recompute(); renderStage(true); updateChrome(); return;
@@ -1128,6 +1134,7 @@
   }
   function onClick(e) {
     if (e.target.closest && rrClick(e)) return;
+    if (e.target.closest && riClick(e)) return;
     if (pvMode() && e.target.closest && e.target.closest('#sheet')) {
       const pc = e.target.closest('[data-pc]');
       if (pc) { e.preventDefault(); pvSelect(pc.dataset.pc); return; }
@@ -1250,6 +1257,7 @@
     if (!overlay) return;
     let o = $('#overlay');
     if (!o) { o = document.createElement('div'); o.id = 'overlay'; o.className = 'overlay'; o.addEventListener('click', ev => { if (ev.target === o) closeOverlay(); }); document.body.appendChild(o); }
+    if (overlay.kind === 'report') { o.innerHTML = riHtml(); return; }
     const list = cloud.list.map(p => {
       const confirm = opts.confirmDel === p.id;
       return `<div class="prow"><div style="min-width:0"><div class="pn">${esc(p.name || 'Untitled')}${p.id === state.meta.id ? ' <span class="tag save">open</span>' : ''}</div><div class="pd">${esc(p.updated ? new Date(p.updated).toLocaleString() : '')}</div></div>
@@ -1265,7 +1273,7 @@
       <section class="stack" style="gap:8px"><h4>Start or import</h4><div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" data-act="new" data-tech="wind">New wind project</button><button class="btn" data-act="new" data-tech="solar">New solar project</button><button class="btn" data-act="new" data-tech="hybrid">New hybrid project</button>
         <button class="btn" data-act="example" data-tech="wind">Wind example</button><button class="btn" data-act="example" data-tech="solar">Solar example</button><button class="btn" data-act="example" data-tech="hybrid">Hybrid example</button><button class="btn" data-act="example" data-tech="bess">Hybrid with storage example</button>
-        <label class="btn" for="importFile">Import project file</label><input id="importFile" type="file" accept=".json,application/json" data-act="import" class="sr"></div>${replace}</section>`;
+        <label class="btn" for="importFile">Import project file</label><input id="importFile" type="file" accept=".json,application/json" data-act="import" class="sr"><button class="btn" data-act="riopen">Import from a report</button></div>${replace}</section>`;
     o.innerHTML = `<div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="ovTitle">
       <header><h3 id="ovTitle">${overlay.kind === 'export' ? 'Export' : 'Projects'}</h3><button class="btn small ghost" data-act="close" aria-label="Close">Close</button></header>
       ${overlay.kind === 'export' ? exportSec + projSec : projSec + exportSec}
@@ -1384,11 +1392,12 @@
     ];
     if (mc) { sum.push([], ['Monte Carlo P90 (GWh/yr)', ...Ns.map(N => mc[N] ? +mc[N].pv.P90.toFixed(3) : '')]); }
     X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(sum), 'Summary');
-    const reg = [['Plant', 'Stage', 'Item', 'Device', 'Category', 'Subcategory', 'Basis', 'Evidence', 'Domain', 'Loss (%, or %/yr for degradation)', 'σ (%, pts for losses, %/yr for degradation)', 'Yearly variability (pts)', 'Energy σ ' + hzLabel() + ' (%)', 'Share of variance ' + hzLabel() + ' (%)', 'Sources']];
+    const reg = [['Plant', 'Stage', 'Item', 'Device', 'Category', 'Subcategory', 'Basis', 'Evidence', 'Domain', 'Loss (%, or %/yr for degradation)', 'σ (%, pts for losses, %/yr for degradation)', 'Yearly variability (pts)', 'Energy σ ' + hzLabel() + ' (%)', 'Share of variance ' + hzLabel() + ' (%)', 'Sources', 'Report evidence']];
+    const stOfItem = it => (it.deviceId ? ((state.devices.find(d => d.id === it.deviceId) || {}).items || {})[it.id] : (state.items || {})[it.id]);
     r.model.items.forEach(it => {
       const la = E.lossAt(it, r.focusN);
       const ens = E.isRes(it.domain) ? (it._S != null ? it._S : S) * it.sigma : it.domain === 'en' ? it.sigma : la.s / Math.max(0.05, 1 - la.L / 100);
-      reg.push([COMP_LABEL[it.comp] || (isSolar() ? 'Solar' : 'Wind'), stageOrderName(it.stage), it.name, it.deviceName || '', it.cat, it.sub, E.IEC_BASIS[it.mode], TIER[it.tier].label, it.domain === 'ws' ? 'wind speed' : it.domain === 'res' ? 'irradiance' : it.domain === 'en' ? 'energy' : 'loss', it.domain === 'loss' ? +it.L.toFixed(3) : '', +it.sigma.toFixed(4), it.iav ? +it.iav.toFixed(3) : '', +ens.toFixed(4), contrib[it.key] ? +(contrib[it.key].share * 100).toFixed(2) : '', (it.def.src || []).map(k => Lb.SOURCES[k] && Lb.SOURCES[k].t).filter(Boolean).join('; ')]);
+      reg.push([COMP_LABEL[it.comp] || (isSolar() ? 'Solar' : 'Wind'), stageOrderName(it.stage), it.name, it.deviceName || '', it.cat, it.sub, E.IEC_BASIS[it.mode], TIER[it.tier].label, it.domain === 'ws' ? 'wind speed' : it.domain === 'res' ? 'irradiance' : it.domain === 'en' ? 'energy' : 'loss', it.domain === 'loss' ? +it.L.toFixed(3) : '', +it.sigma.toFixed(4), it.iav ? +it.iav.toFixed(3) : '', +ens.toFixed(4), contrib[it.key] ? +(contrib[it.key].share * 100).toFixed(2) : '', (it.def.src || []).map(k => Lb.SOURCES[k] && Lb.SOURCES[k].t).filter(Boolean).join('; '), ReportImport.evidenceLine(stOfItem(it))]);
     });
     X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet(reg), 'Register');
     // gross to net at the period on screen: every loss, the energy it takes and what is left

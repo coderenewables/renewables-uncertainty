@@ -117,6 +117,19 @@ LossStack (the separate gross-to-net tool) used WattOdds' loss items and arithme
 - **Clipping from the DC/AC ratio** is now a smooth curve that keeps rising above a ratio of 1.5 (it stopped at 4 %), with the same values at 1.2 and 1.3; its uncertainty grows more slowly than the loss at high ratios. Framework judgement, as before.
 - **Plant view layout.** The inputs panel appears beside the drawing only when a part is selected; project set-up has its own button. The drawing uses the full width otherwise.
 
+## Import from a report (phase 1: paste-back, no AI call from the app)
+
+Projects, the Project step and the plant view's Project set-up have "Import from a report". The user copies a prompt, runs it with the report in an AI chat outside the app, and pastes back one JSON object (schema `wattodds.report-import/1`). The app validates it, shows each value with its page, quote and the AI's confidence beside the value now in the project, and applies the ticked rows in one step.
+
+- `src/reportimport.js` (`ReportImport`, no DOM): `buildPrompt`, `extractJson`, `validateImport`, `planApply`, `applyImport`, `evidenceState`, `evidenceLine`. The valid ids and the prompt come from `Library.ITEMS` at run time. `src/importview.js` is the dialog, inlined into `ui.js`.
+- Imported values use the existing "Enter value" mode, so their evidence tier is "Site value". Items that a report figure already includes are set to "Exclude". No engine change.
+- Evidence (report, page, quote) is kept on the item state as `evidence`, and the project keeps the last ten imports in `importLog`. Both pass through save, load and the JSON export; older projects load unchanged. The workbook's Register sheet has one new column, "Report evidence".
+- Undo uses the baseline: applying pins the project as it was before the import, and "Undo import" reverts to it.
+- Conversions done by the app: k = 2 and P90-based figures to one standard deviation, energy to wind speed or irradiance with the sensitivity in use, efficiency to loss, share of the loss to points, N-year variability to one year. Never converted: absolute units, wind speed to irradiance, lifetime degradation to a yearly rate.
+- Not imported: battery items, yearly variability of a loss, POA ratio, a report P50 in a hybrid, lumped totals. No network call, no key, no PDF parsing.
+- Checks: 81 in `tests/reportimport.test.js`, including the two sample payloads in `tests/fixtures/`.
+- Next: a bring-your-own-key mode that feeds the same schema into the same validate, review and apply path.
+
 ## Name and logo: WattOdds
 
 The tool is now called **WattOdds** ("what are the odds?" with watts), chosen over Thelivu, Yieldband, Plumbline, Varambu, Doubtput, Bellweather, Gustimate, Suncertain and Monte Kaatru. Pramana (registered software trademark), Sigma-based names (an existing energy software) and WattIf (an existing app) were ruled out. Web checks only: run a trademark search (IP India) and confirm the domain before launch.

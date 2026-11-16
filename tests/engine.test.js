@@ -159,7 +159,8 @@ t('solar: site adaptation swaps the satellite term for sensors + adaptation', ()
 t('solar: clipping estimate follows DC/AC ratio', () => {
   const p = L.solarExampleProject(); p.pv.acMW = 120; // DC/AC 1.625
   const r2 = E.evaluate(p, L);
-  near(r2.model.items.find(i => i.id === 'clipping').L, 4.0, 1e-9);
+  // the clipping curve keeps rising above DC/AC 1.5 (no 4 % cap since the "results always on screen" change): 3.8 + 4.2 × (1.625 − 1) = 6.425, shown to two decimals
+  near(r2.model.items.find(i => i.id === 'clipping').L, 6.43, 1e-9);
   near(rs.model.items.find(i => i.id === 'clipping').L, 1.0, 1e-9);
 });
 t('solar: soiling calc = rate × days / 2', () => near(rs.model.items.find(i => i.id === 'soiling').L, 0.3 * 15 / 2, 1e-9));
